@@ -78,7 +78,7 @@
             :report (when report-sym
                       (require (symbol (namespace report-sym)))
                       (deref (resolve report-sym)))}
-           (filter val)
+           (remove (comp nil? val))
            (into {})))))
 
 (defn run [opts]

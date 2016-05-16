@@ -26,16 +26,13 @@
               (update-in [:dependencies] into deps)
               pod/make-pod
               future)
-        project (into {} (filter val {:test-matcher test-matcher
-                                      :parallel? parallel
-                                      :report-sym report}))]
+        opts (into {} (remove (comp nil? val)
+                              {:test-matcher test-matcher
+                               :parallel? parallel
+                               :report-sym report}))]
     (fn [handler]
       (fn [fileset]
-        (let [summary
-              (pod/with-call-in @p
-                (metosin.boot-alt-test.impl/run
-                  ~project))]
-          (println summary)
+        (let [summary (pod/with-call-in @p (metosin.boot-alt-test.impl/run ~opts))]
           (if (> (+ (:fail summary 0) (:error summary 0)) 0)
             (if fail
               (throw (ex-info "Tests failed" summary))
