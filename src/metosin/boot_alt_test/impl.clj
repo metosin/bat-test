@@ -62,16 +62,12 @@
 
     (swap! tracker reload/track-reload)
 
-    (when (::error @tracker)
-      (util/fail "Error reloading: %s\n" (name (::error-ns @tracker)))
-      (util/print-ex (::error @tracker)))
+    (when (::reload/error @tracker)
+      (util/fail "Error reloading: %s\n" (name (::reload/error-ns @tracker)))
+      (util/print-ex (::reload/error @tracker)))
 
     (util/info "Testing: %s\n" (string/join ", " tests))
 
-    ;; FIXME: Workaround for c.t.n strangeness
-    ;; All test namespaces should already be loaded?
-    ;; Still this is required. Should be no-op after first run.
-    (apply require tests)
     (run-tests
       (runner/find-tests tests)
       (->> {:multithread? parallel?
