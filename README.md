@@ -4,6 +4,7 @@ Fast Clojure.test runner for Boot.
 
 ## Features
 
+- **Requires tools.namespace 0.3.0-alpha3**
 - Uses [eftest](https://github.com/weavejester/eftest) to display pretty reports
 and to run tests parallel
 - When used with Boot watch task, uses [clojure.tools.namespace](https://github.com/clojure/tools.namespace) to reload
