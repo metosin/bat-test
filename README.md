@@ -1,4 +1,4 @@
-# Boot-alt-test
+# Boot-alt-test [![Clojars Project](https://img.shields.io/clojars/v/metosin/boot-alt-test.svg)](https://clojars.org/metosin/boot-alt-test)
 
 Fast Clojure.test runner for Boot.
 
