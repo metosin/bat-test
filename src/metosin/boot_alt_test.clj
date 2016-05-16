@@ -31,12 +31,13 @@
                                       :report-sym report}))]
     (fn [handler]
       (fn [fileset]
-        (try
-          (pod/with-call-in @p
-            (metosin.boot-alt-test.impl/run
-              ~project))
-          (handler fileset)
-          (catch Exception e
+        (let [summary
+              (pod/with-call-in @p
+                (metosin.boot-alt-test.impl/run
+                  ~project))]
+          (println summary)
+          (if (> (+ (:fail summary 0) (:error summary 0)) 0)
             (if fail
-              (throw e)
-              fileset)))))))
+              (throw (ex-info "Tests failed" summary))
+              fileset)
+            (handler fileset)))))))

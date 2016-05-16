@@ -83,6 +83,4 @@
                      (dir/scan-dirs tracker)
                      (dir/scan-dirs (track/tracker) (:directories pod/env)))))
 
-  (let [{:keys [fail error] :as summary} (reload-and-test tracker opts)]
-    (if (> (+ fail error) 0)
-      (throw (ex-info "Tests failed" summary)))))
+  (reload-and-test tracker opts))
