@@ -64,7 +64,7 @@
 
     (when (::reload/error @tracker)
       (util/fail "Error reloading: %s\n" (name (::reload/error-ns @tracker)))
-      (util/print-ex (::reload/error @tracker)))
+      (throw (::reload/error @tracker)))
 
     (util/info "Testing: %s\n" (string/join ", " tests))
 
