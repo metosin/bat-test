@@ -60,6 +60,9 @@
   (let [changed-ns (::track/load @tracker)
         tests (filter #(re-matches test-matcher (name %)) changed-ns)]
 
+    (util/dbug "Unload: %s\n" (pr-str (::track/unload @tracker)))
+    (util/dbug "Load: %s\n" (pr-str (::track/load @tracker)))
+
     (swap! tracker reload/track-reload)
 
     (when (::reload/error @tracker)
@@ -79,8 +82,9 @@
 
 (defn run [opts]
   (swap! tracker (fn [tracker]
+                   (util/dbug "Scan directories: %s\n" (pr-str (:directories pod/env)))
                    (if tracker
-                     (dir/scan-dirs tracker)
+                     (dir/scan-dirs tracker (:directories pod/env))
                      (dir/scan-dirs (track/tracker) (:directories pod/env)))))
 
   (reload-and-test tracker opts))
