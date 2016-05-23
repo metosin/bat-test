@@ -65,9 +65,15 @@
 
     (swap! tracker reload/track-reload)
 
-    (when (::reload/error @tracker)
-      (util/fail "Error reloading: %s\n" (name (::reload/error-ns @tracker)))
-      (throw (::reload/error @tracker)))
+    (try
+      (when (::reload/error @tracker)
+        (util/fail "Error reloading: %s\n" (name (::reload/error-ns @tracker)))
+        (throw (::reload/error @tracker)))
+      (catch java.io.FileNotFoundException e
+        (swap! tracker (fn [tracker]
+                         (util/info "Reseting tracker due to file not found exception, all namespaces will be reloaded next time.\n")
+                         (track/tracker)))
+        (throw e)))
 
     (util/info "Testing: %s\n" (string/join ", " tests))
 
