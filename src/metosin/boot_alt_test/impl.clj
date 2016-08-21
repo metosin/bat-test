@@ -9,6 +9,27 @@
             [boot.pod :as pod]))
 
 (def tracker (atom nil))
+(def running (atom false))
+
+(declare run-all)
+
+(defn on-keypress
+  [key f]
+  (letfn [(read-in [] (.read System/in))]
+    (future
+      (loop [k (read-in)]
+        (when (= k key) (f k))
+        (recur (read-in))))))
+
+(defn enter-key-listener
+  [opts]
+  (util/dbug "Listening to the enter key\n")
+  (on-keypress
+   java.awt.event.KeyEvent/VK_ENTER
+   (fn [_]
+     (when-not @running
+       (util/info "Running all tests\n")
+       (run-all opts)))))
 
 (defn reload-and-test
   [tracker {:keys [test-matcher parallel? report-sym]
@@ -42,8 +63,16 @@
            (into {})))))
 
 (defn run [opts]
-  (swap! tracker (fn [tracker]
-                   (util/dbug "Scan directories: %s\n" (pr-str (:directories pod/env)))
-                   (dir/scan-dirs (or tracker (track/tracker)) (:directories pod/env))))
+  (try
+    (reset! running true)
+    (swap! tracker (fn [tracker]
+                     (util/dbug "Scan directories: %s\n" (pr-str (:directories pod/env)))
+                     (dir/scan-dirs (or tracker (track/tracker)) (:directories pod/env))))
 
-  (reload-and-test tracker opts))
+    (reload-and-test tracker opts)
+    (finally
+      (reset! running false))))
+
+(defn run-all [opts]
+  (reset! tracker nil)
+  (run opts))
