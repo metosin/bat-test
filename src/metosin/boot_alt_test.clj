@@ -18,11 +18,10 @@
   Default reporter is eftest.report.progress/report. Some alternatives are:
   - eftest.report.pretty/report (no progress bar)
   - clojure.test/report"
-  [m test-matcher    VAL regex "Regex used to select test namespaces"
-   p parallel            bool  "Run tests parallel"
-   r report          VAL sym   "Reporting function"
-   f fail                bool  "Throw on failure (use on CI)"
-   e enter-runs-all      bool  "Pressing the enter key will run all tests"]
+  [m test-matcher VAL regex "Regex used to select test namespaces"
+   p parallel         bool  "Run tests parallel"
+   r report       VAL sym   "Reporting function"
+   f fail             bool  "Throw on failure (use on CI)"]
   (let [p (-> (core/get-env)
               (update-in [:dependencies] into deps)
               pod/make-pod
@@ -32,8 +31,7 @@
                                :parallel? parallel
                                :report-sym report}))]
     (fn [handler]
-      (if enter-runs-all
-        (pod/with-call-in @p (metosin.boot-alt-test.impl/enter-key-listener opts)))
+      (pod/with-call-in @p (metosin.boot-alt-test.impl/enter-key-listener opts))
       (fn [fileset]
         (let [summary (pod/with-call-in @p (metosin.boot-alt-test.impl/run ~opts))]
           (if (> (+ (:fail summary 0) (:error summary 0)) 0)
