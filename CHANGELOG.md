@@ -1,4 +1,4 @@
-## Unreleased
+## 0.1.1 (21.8.2016)
 
 - Run all tests by pressing `Enter`
 
