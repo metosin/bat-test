@@ -14,6 +14,7 @@ changed namespaces and to run only the tests in changed or affected namespaces
 - Tries to recover from namespace reload errors so that no process restart is needed
     - This means that after some exceptions all the namespaces have to reloaded
     - Related: ([CTN-6](http://dev.clojure.org/jira/browse/TNS-6), [CTN-24](http://dev.clojure.org/jira/browse/TNS-24))
+- Run all tests by hitting `enter`
 
 ![Screenshot](./screenshot.png)
 
