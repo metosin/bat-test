@@ -32,7 +32,7 @@
                                :report-sym report}))]
     (fn [handler]
       (System/setProperty "java.awt.headless" "true")
-      (pod/with-call-in @p (metosin.boot-alt-test.impl/enter-key-listener opts))
+      (pod/with-call-in @p (metosin.boot-alt-test.impl/enter-key-listener ~opts))
       (fn [fileset]
         (let [summary (pod/with-call-in @p (metosin.boot-alt-test.impl/run ~opts))]
           (if (> (+ (:fail summary 0) (:error summary 0)) 0)
