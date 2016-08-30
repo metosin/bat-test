@@ -21,7 +21,9 @@
   [m test-matcher VAL regex "Regex used to select test namespaces"
    p parallel         bool  "Run tests parallel"
    r report       VAL sym   "Reporting function"
-   f fail             bool  "Throw on failure (use on CI)"]
+   f fail             bool  "Throw on failure (use on CI)"
+   s on-start     VAL sym   "Function to be called before running tests (after reloading namespaces)"
+   e on-end       VAL sym   "Function to be called after running tests"]
   (let [p (-> (core/get-env)
               (update-in [:dependencies] into deps)
               pod/make-pod
@@ -29,7 +31,9 @@
         opts (into {} (remove (comp nil? val)
                               {:test-matcher test-matcher
                                :parallel? parallel
-                               :report-sym report}))]
+                               :report-sym report
+                               :on-start-sym on-start
+                               :on-end-sym on-end}))]
     (fn [handler]
       (System/setProperty "java.awt.headless" "true")
       (pod/with-call-in @p (metosin.boot-alt-test.impl/enter-key-listener ~opts))

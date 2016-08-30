@@ -32,7 +32,7 @@
        (run-all opts)))))
 
 (defn reload-and-test
-  [tracker {:keys [test-matcher parallel? report-sym]
+  [tracker {:keys [on-start-sym test-matcher parallel? report-sym]
             :or {test-matcher #".*test"}}]
   (let [changed-ns (::track/load @tracker)
         tests (filter #(re-matches test-matcher (name %)) changed-ns)]
@@ -51,6 +51,10 @@
         (reset! tracker (track/tracker))
         (throw e)))
 
+    (when on-start-sym
+      (require (symbol (namespace on-start-sym)))
+      ((resolve on-start-sym)))
+
     (util/info "Testing: %s\n" (string/join ", " tests))
 
     (eftest/run-tests
@@ -62,7 +66,7 @@
            (remove (comp nil? val))
            (into {})))))
 
-(defn run [opts]
+(defn run [{:keys [on-end-sym] :as opts}]
   (try
     (reset! running true)
     (swap! tracker (fn [tracker]
@@ -71,6 +75,10 @@
 
     (reload-and-test tracker opts)
     (finally
+      (when on-end-sym
+        (require (symbol (namespace on-end-sym)))
+        ((resolve on-end-sym)))
+
       (reset! running false))))
 
 (defn run-all [opts]
