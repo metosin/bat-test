@@ -11,8 +11,8 @@
   pom {:project     'metosin/boot-alt-test
        :version     +version+
        :description "Fast Clojure.test runner for Boot"
-       :url         "https://github.com/metosin/boot-quickie"
-       :scm         {:url "https://github.com/metosin/boot-quickie"}
+       :url         "https://github.com/metosin/boot-alt-test"
+       :scm         {:url "https://github.com/metosin/boot-alt-test"}
        :license     {"Eclipse Public License" "http://www.eclipse.org/legal/epl-v10.html"}})
 
 (deftask build []
