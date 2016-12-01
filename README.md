@@ -15,6 +15,9 @@ changed namespaces and to run only the tests in changed or affected namespaces
     - Related: ([CTN-6](http://dev.clojure.org/jira/browse/TNS-6), [CTN-24](http://dev.clojure.org/jira/browse/TNS-24))
 - Run all tests by hitting `enter`
 - Can optionally run tests parallel
+- Two hooks to manage test environment
+    - `on-start` hook: run a function before any tests are run
+    - `on-end` hook: run a function after all tests are run
 
 ![Screenshot](./screenshot.png)
 
