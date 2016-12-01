@@ -13,13 +13,11 @@
   Changed namespaces are reloaded using clojure.tools.namespace.
   Only tests in changed or affected namespaces are run.
 
-  By default tests are run parallel (parallel option).
-
   Default reporter is eftest.report.progress/report. Some alternatives are:
   - eftest.report.pretty/report (no progress bar)
   - clojure.test/report"
   [m test-matcher VAL regex "Regex used to select test namespaces"
-   p parallel         bool  "Run tests parallel"
+   p parallel         bool  "Run tests parallel (default off)"
    r report       VAL sym   "Reporting function"
    f fail             bool  "Throw on failure (use on CI)"
    s on-start     VAL sym   "Function to be called before running tests (after reloading namespaces)"
@@ -30,7 +28,8 @@
               future)
         opts (into {} (remove (comp nil? val)
                               {:test-matcher test-matcher
-                               :parallel? parallel
+                               ;; If not set, nil => false
+                               :parallel? (true? parallel)
                                :report-sym report
                                :on-start-sym on-start
                                :on-end-sym on-end}))]
