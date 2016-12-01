@@ -23,7 +23,6 @@ changed namespaces and to run only the tests in changed or affected namespaces
 
 ## TODO / Ideas
 
-- Provide option to run all the tests instead of just changed/affected namespaces
 - Maybe provide a way to run all the tests from REPL? Nrepl middleware?
 - Junit output
 - Check if it would make any sense to merge the improvements to boot-test?

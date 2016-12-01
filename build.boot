@@ -1,9 +1,9 @@
-(def +version+ "0.1.3-SNAPSHOT")
+(def +version+ "0.2.0")
 
 (set-env!
   :resource-paths #{"src"}
   :dependencies   '[[org.clojure/clojure "1.7.0" :scope "provided"]
-                    [boot/core "2.5.5" :scope "provided"]
+                    [boot/core "2.6.0" :scope "provided"]
                     [eftest "0.1.1" :scope "test"]
                     [org.clojure/tools.namespace "0.3.0-alpha3" :scope "test"]])
 
