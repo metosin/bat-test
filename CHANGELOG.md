@@ -1,3 +1,11 @@
+## 0.2.1 (1.12.2016)
+
+- Only reload already loaded and test ns.
+    - This should fix problems in case there are namespaces that are
+    unloadable in test pod, e.g. they require `boot.core`. This might also
+    improve performance a bit as unncessary namespaces are not loaded.
+
+
 ## 0.2.0 (1.12.2016)
 
 - Default `parallel` off
