@@ -31,11 +31,22 @@
        (util/info "Running all tests\n")
        (run-all opts)))))
 
+(defn load-only-loaded-and-test-ns
+  [{:keys [::track/load] :as tracker} test-matcher]
+  (let [x (filter (fn [nss]
+                    (or (find-ns nss)
+                        (re-matches test-matcher (name nss))))
+                  load)]
+    (assoc tracker ::track/load x)))
+
 (defn reload-and-test
   [tracker {:keys [on-start-sym test-matcher parallel? report-sym]
             :or {test-matcher #".*test"}}]
   (let [changed-ns (::track/load @tracker)
         tests (filter #(re-matches test-matcher (name %)) changed-ns)]
+
+    ;; Only reload non-test namespaces which are already loaded
+    (swap! tracker load-only-loaded-and-test-ns test-matcher)
 
     (util/dbug "Unload: %s\n" (pr-str (::track/unload @tracker)))
     (util/dbug "Load: %s\n" (pr-str (::track/load @tracker)))
