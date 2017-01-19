@@ -4,7 +4,7 @@
             [boot.core :as core]))
 
 (def ^:private deps
-  [['eftest "0.1.1"]
+  [['eftest "0.1.2"]
    ['org.clojure/tools.namespace "0.3.0-alpha3"]])
 
 (core/deftask alt-test
