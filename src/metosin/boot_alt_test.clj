@@ -19,7 +19,6 @@
   [m test-matcher VAL regex "Regex used to select test namespaces"
    p parallel         bool  "Run tests parallel (default off)"
    r report       VAL sym   "Reporting function"
-   f fail             bool  "Throw on failure (use on CI)"
    s on-start     VAL sym   "Function to be called before running tests (after reloading namespaces)"
    e on-end       VAL sym   "Function to be called after running tests"]
   (let [p (-> (core/get-env)
@@ -39,7 +38,5 @@
       (fn [fileset]
         (let [summary (pod/with-call-in @p (metosin.boot-alt-test.impl/run ~opts))]
           (if (> (+ (:fail summary 0) (:error summary 0)) 0)
-            (if fail
-              (throw (ex-info "Tests failed" summary))
-              fileset)
+            (throw (ex-info "Tests failed\n" (assoc summary :boot.util/omit-stacktrace? true)))
             (handler fileset)))))))
