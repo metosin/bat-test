@@ -31,6 +31,6 @@ changed namespaces and to run only the tests in changed or affected namespaces
 
 ## License
 
-Copyright © 2016 Juho Teperi
+Copyright © 2016-2017 Juho Teperi
 
 Distributed under the Eclipse Public License either version 1.0 or (at your option) any later version.
