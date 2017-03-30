@@ -1,3 +1,7 @@
+## 0.3.1 (30.3.2017)
+
+- Add `filter` option to provide function to filter test vars
+
 ## 0.3.0 (19.1.2017)
 
 - Update eftest to version `0.1.2`

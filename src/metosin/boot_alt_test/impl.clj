@@ -40,10 +40,14 @@
     (assoc tracker ::track/load x)))
 
 (defn reload-and-test
-  [tracker {:keys [on-start-sym test-matcher parallel? report-sym]
+  [tracker {:keys [on-start-sym test-matcher parallel? report-sym filter-sym]
             :or {test-matcher #".*test"}}]
   (let [changed-ns (::track/load @tracker)
-        tests (filter #(re-matches test-matcher (name %)) changed-ns)]
+        tests (filter #(re-matches test-matcher (name %)) changed-ns)
+        filter-fn (if filter-sym
+                    (do (require (symbol (namespace filter-sym)))
+                        (deref (resolve filter-sym)))
+                    identity)]
 
     ;; Only reload non-test namespaces which are already loaded
     (swap! tracker load-only-loaded-and-test-ns test-matcher)
@@ -69,7 +73,7 @@
     (util/info "Testing: %s\n" (string/join ", " tests))
 
     (eftest/run-tests
-      (runner/find-tests tests)
+      (filter filter-fn (runner/find-tests tests))
       (->> {:multithread? parallel?
             :report (when report-sym
                       (require (symbol (namespace report-sym)))
