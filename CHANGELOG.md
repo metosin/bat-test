@@ -1,6 +1,14 @@
+## 0.3.2 (27.4.2017)
+
+- Update Eftest to version `0.3.1`
+
+**[compare](https://github.com/metosin/boot-alt-test/compare/0.3.1...0.3.2)**
+
 ## 0.3.1 (30.3.2017)
 
 - Add `filter` option to provide function to filter test vars
+
+**[compare](https://github.com/metosin/boot-alt-test/compare/0.3.0...0.3.1)**
 
 ## 0.3.0 (19.1.2017)
 
