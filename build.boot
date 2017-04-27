@@ -3,7 +3,7 @@
 (set-env!
   :resource-paths #{"src"}
   :dependencies   '[[org.clojure/clojure "1.8.0" :scope "provided"]
-                    [eftest "0.1.1" :scope "test"]
+                    [eftest "0.3.1" :scope "test"]
                     [org.clojure/tools.namespace "0.3.0-alpha3" :scope "test"]])
 
 (task-options!
