@@ -45,15 +45,6 @@ $ boot alt-test --report eftest.report.pretty/report
 (alt-test :report 'eftest.report.pretty/report)
 ```
 
-## TODO / Ideas
-
-- Maybe provide a way to run all the tests from REPL? Nrepl middleware?
-- Junit output
-- Check if it would make any sense to merge the improvements to boot-test?
-- [Cloverage](https://github.com/lshift/cloverage) integration
-- A way to disable unloading/reloading of certain namespaces? Is it required?
-- Support output catching and replay when a test fails: https://github.com/weavejester/eftest/pull/16
-
 ## License
 
 Copyright © 2016-2017 Juho Teperi
