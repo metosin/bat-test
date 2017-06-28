@@ -21,6 +21,18 @@ changed namespaces and to run only the tests in changed or affected namespaces
 
 ![Screenshot](./screenshot.png)
 
+## Usage
+
+1. Add `[metosin/boot-alt-test "X.X.X" :scope "test"]` as a dependency in your
+  build.boot.
+
+1. Add `(require '[metosin.boot-alt-test :refer (alt-test)])` somewhere in your
+   build.boot to make the task available to your Boot workflow.
+
+1. Run `boot alt-test` at the command-line or `(boot (alt-test))` in the REPL.
+
+See `boot alt-test -h` for a list of available task options.
+
 ## TODO / Ideas
 
 - Maybe provide a way to run all the tests from REPL? Nrepl middleware?
