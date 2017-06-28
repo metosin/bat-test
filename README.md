@@ -29,9 +29,21 @@ changed namespaces and to run only the tests in changed or affected namespaces
 1. Add `(require '[metosin.boot-alt-test :refer (alt-test)])` somewhere in your
    build.boot to make the task available to your Boot workflow.
 
-1. Run `boot alt-test` at the command-line or `(boot (alt-test))` in the REPL.
+1. Run `boot alt-test` at the command-line or `(boot (alt-test))` in the REPL, or add `alt-test` task as part of your Boot pipeline.
 
 See `boot alt-test -h` for a list of available task options.
+
+### Test result reporter
+
+Boot-alt-test uses [eftest](https://github.com/weavejester/eftest) and by default that uses a test reporter that displays a progress bar of the test run. Your test output can mess this progress bar so you might want to change the used reporter. This can be achieved by providing `report` option and using alternative `pretty` reporter:
+
+```
+# From CLI
+$ boot alt-test --report eftest.report.pretty/report
+
+;; From Clojure
+(alt-test :report 'eftest.report.pretty/report)
+```
 
 ## TODO / Ideas
 
@@ -40,6 +52,7 @@ See `boot alt-test -h` for a list of available task options.
 - Check if it would make any sense to merge the improvements to boot-test?
 - [Cloverage](https://github.com/lshift/cloverage) integration
 - A way to disable unloading/reloading of certain namespaces? Is it required?
+- Support output catching and replay when a test fails: https://github.com/weavejester/eftest/pull/16
 
 ## License
 
