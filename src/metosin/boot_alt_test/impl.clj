@@ -5,8 +5,7 @@
             [clojure.string :as string]
             [eftest.runner :as runner]
             [metosin.boot-alt-test.eftest :as eftest]
-            [boot.util :as util]
-            [boot.pod :as pod]))
+            [metosin.boot-alt-test.util :as util]))
 
 (def tracker (atom nil))
 (def running (atom false))
@@ -81,12 +80,12 @@
            (remove (comp nil? val))
            (into {})))))
 
-(defn run [{:keys [on-end-sym] :as opts}]
+(defn run [{:keys [on-end-sym watch-directories] :as opts}]
   (try
     (reset! running true)
     (swap! tracker (fn [tracker]
-                     (util/dbug "Scan directories: %s\n" (pr-str (:directories pod/env)))
-                     (dir/scan-dirs (or tracker (track/tracker)) (:directories pod/env))))
+                     (util/dbug "Scan directories: %s\n" (pr-str watch-directories))
+                     (dir/scan-dirs (or tracker (track/tracker)) watch-directories)))
 
     (reload-and-test tracker opts)
     (finally

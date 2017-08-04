@@ -1,4 +1,4 @@
-(def +version+ "0.3.2")
+(def +version+ "0.4.0-SNAPSHOT")
 
 (set-env!
   :resource-paths #{"src"}

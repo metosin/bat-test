@@ -33,7 +33,9 @@
                                :report-sym report
                                :on-start-sym on-start
                                :on-end-sym on-end
-                               :filter-sym filter}))]
+                               :filter-sym filter
+                               :verbosity (deref util/*verbosity*)
+                               :watch-directories (:directories pod/env)}))]
     (fn [handler]
       (System/setProperty "java.awt.headless" "true")
       (pod/with-call-in @p (metosin.boot-alt-test.impl/enter-key-listener ~opts))
