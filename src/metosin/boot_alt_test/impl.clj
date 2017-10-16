@@ -4,6 +4,11 @@
             [clojure.tools.namespace.reload :as reload]
             [clojure.string :as string]
             [eftest.runner :as runner]
+            ;; FIXME: load lazily?
+            [eftest.report.pretty :as pretty]
+            [eftest.report.progress :as progress]
+            [eftest.report.junit :as junit]
+            [eftest.report :as report]
             [metosin.boot-alt-test.eftest :as eftest]
             [metosin.boot-alt-test.util :as util]))
 
@@ -38,8 +43,25 @@
                   load)]
     (assoc tracker ::track/load x)))
 
+(defn declarative-reporter
+  "Configure reporters declaratively.
+
+  :type can be keyword :pretty, :progress or nil (no output)."
+  [{:keys [junit junit-output-to type]}]
+  (fn [m]
+    (case type
+      :pretty (pretty/report m)
+      :progress (progress/report m)
+      nil nil
+      (throw (ex-info "Bad declarative-reporter :type, should be :pretty, :progress or nil." {:type type})))
+
+    (when junit
+      (binding [clojure.test/*report-counters* nil]
+        (let [r (report/report-to-file junit/report (or junit-output-to "junit.xml"))]
+          (r m))))))
+
 (defn reload-and-test
-  [tracker {:keys [on-start-sym test-matcher parallel? report-sym filter-sym]
+  [tracker {:keys [on-start-sym test-matcher parallel? report filter-sym]
             :or {test-matcher #".*test"}}]
   (let [changed-ns (::track/load @tracker)
         tests (filter #(re-matches test-matcher (name %)) changed-ns)
@@ -74,9 +96,12 @@
     (eftest/run-tests
       (filter filter-fn (runner/find-tests tests))
       (->> {:multithread? parallel?
-            :report (when report-sym
-                      (require (symbol (namespace report-sym)))
-                      (deref (resolve report-sym)))}
+            :report (cond
+                      (map? report) (declarative-reporter report)
+                      (symbol? report) (do (require (symbol (namespace report)))
+                                        (deref (resolve report)))
+                      (ifn? report) report
+                      :else (throw (ex-info "Unknown :report value, should be map, symbol or fn." {:report report})))}
            (remove (comp nil? val))
            (into {})))))
 

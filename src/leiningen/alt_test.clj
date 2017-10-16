@@ -41,7 +41,7 @@
                               {:test-matcher (:test-matcher options)
                                ;; If not set, nil => false
                                :parallel? (true? (:parallel options))
-                               :report-sym (:report options)
+                               :report (:report options)
                                :on-start-sym (:on-start options)
                                :on-end-sym (:on-end options)
                                :filter-sym (:filter options)

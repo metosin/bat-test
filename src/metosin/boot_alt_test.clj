@@ -1,7 +1,8 @@
 (ns metosin.boot-alt-test
   {:boot/export-tasks true}
   (:require [boot.pod :as pod]
-            [boot.core :as core]))
+            [boot.core :as core]
+            [boot.util :as util]))
 
 (def ^:private deps
   [['eftest "0.3.1"]
@@ -18,7 +19,7 @@
   - clojure.test/report"
   [m test-matcher VAL regex "Regex used to select test namespaces"
    p parallel         bool  "Run tests parallel (default off)"
-   r report       VAL sym   "Reporting function"
+   r report       VAL edn   "Reporting function"
    f filter       VAL sym   "Function to filter the test vars"
    s on-start     VAL sym   "Function to be called before running tests (after reloading namespaces)"
    e on-end       VAL sym   "Function to be called after running tests"]
@@ -30,7 +31,7 @@
                               {:test-matcher test-matcher
                                ;; If not set, nil => false
                                :parallel? (true? parallel)
-                               :report-sym report
+                               :report report
                                :on-start-sym on-start
                                :on-end-sym on-end
                                :filter-sym filter
