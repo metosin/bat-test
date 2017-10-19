@@ -34,15 +34,9 @@
               (update-in [:dependencies] into deps)
               pod/make-pod
               future)
-        opts (into {} (remove (comp nil? val)
-                              (merge (dissoc *opts* :on-start :on-end :filter)
-                                     {;; If not set, nil => false
-                                      :parallel? (true? parallel)
-                                      :on-start-sym on-start
-                                      :on-end-sym on-end
-                                      :filter-sym filter
-                                      :verbosity (deref util/*verbosity*)
-                                      :watch-directories (:directories pod/env)})))]
+        opts (assoc *opts*
+                    :verbosity (deref util/*verbosity*)
+                    :watch-directories (:directories pod/env))]
     (fn [handler]
       (System/setProperty "java.awt.headless" "true")
       (pod/with-call-in @p (metosin.boot-alt-test.impl/enter-key-listener ~opts))

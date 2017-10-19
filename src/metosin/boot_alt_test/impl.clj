@@ -79,16 +79,30 @@
 
     :else (throw (ex-info "Unknown reporter value, should be keyword, symbol or fn." {:report report}))))
 
+(defn resolve-hook
+  "Resolve :report, :on-start etc. value to fn.
+
+  In Boot, these are symbols, but in lein, usually they are already fns."
+  [x]
+  (cond
+    (symbol? x)
+    (do
+      (require (symbol (namespace x)))
+      (resolve x))
+
+    (ifn? x) x
+
+    :else nil))
+
 (defn reload-and-test
-  [tracker {:keys [on-start-sym test-matcher parallel? report filter-sym]
+  [tracker {:keys [on-start test-matcher parallel? report]
             :or {report :progress
-                 test-matcher #".*test"}}]
-  (let [changed-ns (::track/load @tracker)
+                 test-matcher #".*test"}
+            :as opts}]
+  (let [parallel? (true? parallel?)
+        changed-ns (::track/load @tracker)
         tests (filter #(re-matches test-matcher (name %)) changed-ns)
-        filter-fn (if filter-sym
-                    (do (require (symbol (namespace filter-sym)))
-                        (deref (resolve filter-sym)))
-                    identity)]
+        filter-fn (or (resolve-hook (:filter opts)) identity)]
 
     ;; Only reload non-test namespaces which are already loaded
     (swap! tracker load-only-loaded-and-test-ns test-matcher)
@@ -107,10 +121,7 @@
         (reset! tracker (track/tracker))
         (throw e)))
 
-    (when on-start-sym
-      (require (symbol (namespace on-start-sym)))
-      ((resolve on-start-sym)))
-
+    ((resolve-hook on-start))
     (util/info "Testing: %s\n" (string/join ", " tests))
 
     (runner/run-tests
@@ -140,7 +151,7 @@
             (util/warn "Problem running shell command `%s`\n" (clojure.string/join " " command))
             (util/warn "Exception: %s\n" (.getMessage e))))))) )
 
-(defn run [{:keys [on-end-sym watch-directories notify-command] :as opts}]
+(defn run [{:keys [on-end watch-directories notify-command] :as opts}]
   (try
     (reset! running true)
     (swap! tracker (fn [tracker]
@@ -153,10 +164,7 @@
 
       summary)
     (finally
-      (when on-end-sym
-        (require (symbol (namespace on-end-sym)))
-        ((resolve on-end-sym)))
-
+      ((resolve-hook on-end))
       (reset! running false))))
 
 (defn run-all [opts]

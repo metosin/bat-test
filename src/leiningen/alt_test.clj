@@ -11,17 +11,30 @@
                              ['org.clojure/tools.namespace "0.3.0-alpha3"]
                              ['watchtower "0.1.1"]]})
 
-(defn- run-tests [project options watch?]
+(defn quoted-namespace [key s]
+  (try
+    `'~(-> s namespace symbol)
+    (catch NullPointerException cause
+      (throw (ex-info (format "%s symbol must be namespace qualified" key) {key s} cause)))))
+
+(defn report-namespaces [report]
+  (cond
+    (vector? report) (mapcat report-namespaces report)
+    (map? report) (report-namespaces (:type report))
+    (symbol? report) [(quoted-namespace :report report)]
+    :else nil))
+
+(defn used-namespaces [{:keys [report on-start on-end filter]}]
+  (cond-> (report-namespaces report)
+    filter (conj (quoted-namespace :filter filter))
+    on-start (conj (quoted-namespace :on-start on-start))
+    on-end (conj (quoted-namespace :on-end on-end))))
+
+(defn- run-tests [project opts watch?]
   (let [watch-directories (vec (concat (:test-paths project)
                                        (:source-paths project)
                                        (:resource-paths project)))
-        opts (into {} (remove (comp nil? val)
-                              (merge (dissoc options :on-start :on-end :filter)
-                                     {;; If not set, nil => false
-                                      :parallel? (true? (:parallel? options))
-                                      :on-start-sym (:on-start options)
-                                      :on-end-sym (:on-end options)
-                                      :filter-sym (:filter options)})))]
+        opts (assoc opts :watch-directories watch-directories)]
     (eval/eval-in-project
       project
       (if watch?
@@ -41,7 +54,8 @@
            (if ~(= :leiningen (:eval-in project))
              exit-code#
              (System/exit exit-code#))))
-      '(require 'metosin.boot-alt-test.impl 'watchtower.core))))
+      `(require 'metosin.boot-alt-test.impl 'watchtower.core
+                ~@(used-namespaces opts)))))
 
 ;; For docstrings
 
