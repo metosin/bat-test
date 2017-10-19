@@ -9,7 +9,6 @@
             [eftest.report.progress :as progress]
             [eftest.report.junit :as junit]
             [eftest.report :as report]
-            [metosin.boot-alt-test.eftest :as eftest]
             [metosin.boot-alt-test.util :as util]))
 
 (def tracker (atom nil))
@@ -93,7 +92,7 @@
 
     (util/info "Testing: %s\n" (string/join ", " tests))
 
-    (eftest/run-tests
+    (runner/run-tests
       (filter filter-fn (runner/find-tests tests))
       (->> {:multithread? parallel?
             :report (cond
