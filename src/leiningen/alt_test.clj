@@ -16,16 +16,12 @@
                                        (:source-paths project)
                                        (:resource-paths project)))
         opts (into {} (remove (comp nil? val)
-                              ;; FIXME:
-                              {:test-matcher (:test-matcher options)
-                               ;; If not set, nil => false
-                               :parallel? (true? (:parallel? options))
-                               :report (:report options)
-                               :on-start-sym (:on-start options)
-                               :on-end-sym (:on-end options)
-                               :filter-sym (:filter options)
-                               :verbosity (:verbosity options)
-                               :watch-directories watch-directories}))]
+                              (merge (dissoc options :on-start :on-end :filter)
+                                     {;; If not set, nil => false
+                                      :parallel? (true? (:parallel? options))
+                                      :on-start-sym (:on-start options)
+                                      :on-end-sym (:on-end options)
+                                      :filter-sym (:filter options)})))]
     (eval/eval-in-project
       project
       (if watch?
