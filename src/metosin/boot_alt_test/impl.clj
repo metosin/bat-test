@@ -92,17 +92,38 @@
 
     (ifn? x) x
 
-    :else nil))
+    :else (constantly true)))
+
+(defn namespaces-match [selected-namespaces nss]
+  (if (seq selected-namespaces)
+    (filter (set selected-namespaces) nss)
+    nss))
+
+(defn selectors-match [selectors vars]
+  (if (seq selectors)
+    (filter (fn [var]
+              (some (fn [[selector args]]
+                      (apply (eval (if (vector? selector)
+                                     (second selector)
+                                     selector))
+                             (merge (-> var meta :ns meta)
+                                    (assoc (meta var) :leiningen.test/var var))
+                             args))
+                    selectors))
+            vars)
+    vars))
 
 (defn reload-and-test
-  [tracker {:keys [on-start test-matcher parallel? report]
+  [tracker {:keys [on-start test-matcher parallel? report selectors namespaces]
             :or {report :progress
                  test-matcher #".*test"}
             :as opts}]
   (let [parallel? (true? parallel?)
+
         changed-ns (::track/load @tracker)
-        tests (filter #(re-matches test-matcher (name %)) changed-ns)
-        filter-fn (or (resolve-hook (:filter opts)) identity)]
+        test-namespaces (->> changed-ns
+                             (filter #(re-matches test-matcher (name %)))
+                             (namespaces-match namespaces))]
 
     ;; Only reload non-test namespaces which are already loaded
     (swap! tracker load-only-loaded-and-test-ns test-matcher)
@@ -122,14 +143,16 @@
         (throw e)))
 
     ((resolve-hook on-start))
-    (util/info "Testing: %s\n" (string/join ", " tests))
+    (util/info "Testing: %s\n" (string/join ", " test-namespaces))
 
     (runner/run-tests
-      (filter filter-fn (runner/find-tests tests))
-      (->> {:multithread? parallel?
-            :report (resolve-reporter report)}
-           (remove (comp nil? val))
-           (into {})))))
+      (->> (runner/find-tests test-namespaces)
+           (selectors-match selectors)
+           (filter (resolve-hook (:filter opts))))
+      (-> opts
+          (dissoc :parallel? :on-start :on-end :filter :test-matcher :selectors)
+          (assoc :multithread? parallel?
+                 :report (resolve-reporter report))))))
 
 (defn result-message [{:keys [pass error fail]}]
   (if (pos? (+ fail error))

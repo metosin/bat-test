@@ -4,6 +4,7 @@
             [leiningen.core.project :as project]
             [leiningen.core.main :as main]
             [leiningen.help :as help]
+            [leiningen.test :as test]
             [clojure.java.io :as io]))
 
 (def profile {:dependencies [['metosin/boot-alt-test "0.4.0-SNAPSHOT"]
@@ -97,23 +98,29 @@ Available options:
 :on-end          Function to be called after running tests
 :notify-command  String or vector describing a command to run after tests
 
-Command arguments:
-Add `:debug` as subtask argument to enable debugging output."
-  {:help-arglists '([once auto])
+Also supports Lein test selectors, check `lein test help` for more information.
+
+Arguments:
+- once, auto, help
+- test selectors"
+  {:help-arglists '([& tests])
    :subtasks      [#'once #'auto]}
-  ([project]
-   (alt-test project nil))
-  ([project subtask & args]
-   (let [args (set args)
-         project (project/merge-profiles project [:leiningen/test :test profile])
-         config (cond-> (:alt-test project)
-                  (contains? args ":debug") (assoc :verbosity 2))]
-     (case subtask
-       ("once" nil) (try (when-let [n (run-tests project config false)]
-                           (when (and (number? n) (pos? n))
-                             (throw (ex-info "Tests failed." {:exit-code n}))))
-                         (catch clojure.lang.ExceptionInfo e
-                           (main/abort "Tests failed.")))
-       "auto" (run-tests project config true)
-       "help" (println (help/help-for "alt-test"))
-       (main/warn "Unknown task.")))))
+  [project & args]
+  (let [subtask (or (some #{"auto" "once" "help"} args) "once")
+        args (remove #{"auto" "once" "help"} args)
+        ;; read-args tries to find namespaces in test-paths if args doesn't contain namespaces
+        [namespaces selectors] (test/read-args args (assoc project :test-paths nil))
+        project (project/merge-profiles project [:leiningen/test :test profile])
+        config (assoc (:alt-test project)
+                      :selectors (vec selectors)
+                      :namespaces (mapv (fn [n] `'~n) namespaces))]
+    (case subtask
+      "once" (try
+               (when-let [n (run-tests project config false)]
+                 (when (and (number? n) (pos? n))
+                   (throw (ex-info "Tests failed." {:exit-code n}))))
+               (catch clojure.lang.ExceptionInfo e
+                 (main/abort "Tests failed.")))
+      "auto" (run-tests project config true)
+      "help" (println (help/help-for "alt-test"))
+      (main/warn "Unknown task."))))

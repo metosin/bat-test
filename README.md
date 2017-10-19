@@ -1,12 +1,12 @@
 # Boot-alt-test [![Clojars Project](https://img.shields.io/clojars/v/metosin/boot-alt-test.svg)](https://clojars.org/metosin/boot-alt-test)
 
-Fast Clojure.test runner for Boot.
+Fast Clojure.test runner for Boot and Lein.
 
 ## Features
 
 - **Requires tools.namespace 0.3.0-alpha3**
 - Uses [eftest](https://github.com/weavejester/eftest) to display pretty reports
-- When used with Boot watch task, uses [clojure.tools.namespace](https://github.com/clojure/tools.namespace) to reload
+- Uses [clojure.tools.namespace](https://github.com/clojure/tools.namespace) to reload
 changed namespaces and to run only the tests in changed or affected namespaces
 - Tries to recover from namespace reload errors so that no process restart is needed
     - This means that after some exceptions all the namespaces have to reloaded
@@ -16,8 +16,23 @@ changed namespaces and to run only the tests in changed or affected namespaces
 - Two hooks to manage test environment
     - `on-start` hook: run a function before any tests are run
     - `on-end` hook: run a function after all tests are run
+- Easy way to setup and combine eftest reporters:
+    - Built-in reporters can be referred by keywords `:pretty`, `:progress` and `:junit`
+    - Reporter can be map with `:type` (referring to reporter fn) and option `:output-to`
+    which will redirect the output to a file.
+    - Multiple reporters can be combined when defining them as vector:
+    `(alt-test :report [:pretty {:type :json :output-to "target/junit.xml"}])`
 
 ![Screenshot](./screenshot.png)
+
+### Leiningen features
+
+- Built-in file change watcher
+- Copies lein-test API, e.g. test-selectors:
+    - `lein alt-test :only namespace/test-var`
+    - `lein alt-test only-this-namespace`
+    - `lein alt-test :integration`
+- `:notify-command` for calling `notify-send` or Growl or such
 
 ## Usage
 
