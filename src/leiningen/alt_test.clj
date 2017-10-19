@@ -81,6 +81,7 @@ Available options:
 :filter          Function to filter the test vars
 :on-start        Function to be called before running tests (after reloading namespaces)
 :on-end          Function to be called after running tests
+:notify-command  String or vector describing a command to run after tests
 
 Command arguments:
 Add `:debug` as subtask argument to enable debugging output."

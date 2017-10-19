@@ -2,6 +2,7 @@
   (:require [clojure.tools.namespace.dir :as dir]
             [clojure.tools.namespace.track :as track]
             [clojure.tools.namespace.reload :as reload]
+            [clojure.java.shell :refer [sh]]
             [clojure.string :as string]
             [eftest.runner :as runner]
             [eftest.report :as report]
@@ -119,14 +120,38 @@
            (remove (comp nil? val))
            (into {})))))
 
-(defn run [{:keys [on-end-sym watch-directories] :as opts}]
+(defn result-message [{:keys [pass error fail]}]
+  (if (pos? (+ fail error))
+    (format "Failed %s of %s assertions"
+            (+ fail error)
+            (+ fail error pass))
+    (format "Passed all tests")))
+
+(defn run-notify-command [notify-command summary]
+  (let [notify-command (if (string? notify-command)
+                         [notify-command]
+                         notify-command)
+        message (result-message summary)]
+    (when (seq notify-command)
+      (let [command (concat notify-command [message])]
+        (try
+          (apply sh command)
+          (catch Exception e
+            (util/warn "Problem running shell command `%s`\n" (clojure.string/join " " command))
+            (util/warn "Exception: %s\n" (.getMessage e))))))) )
+
+(defn run [{:keys [on-end-sym watch-directories notify-command] :as opts}]
   (try
     (reset! running true)
     (swap! tracker (fn [tracker]
                      (util/dbug "Scan directories: %s\n" (pr-str watch-directories))
                      (dir/scan-dirs (or tracker (track/tracker)) watch-directories)))
 
-    (reload-and-test tracker opts)
+    (let [summary (reload-and-test tracker opts)]
+
+      (run-notify-command notify-command summary)
+
+      summary)
     (finally
       (when on-end-sym
         (require (symbol (namespace on-end-sym)))
