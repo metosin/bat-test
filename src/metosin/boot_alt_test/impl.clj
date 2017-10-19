@@ -4,10 +4,6 @@
             [clojure.tools.namespace.reload :as reload]
             [clojure.string :as string]
             [eftest.runner :as runner]
-            ;; FIXME: load lazily?
-            [eftest.report.pretty :as pretty]
-            [eftest.report.progress :as progress]
-            [eftest.report.junit :as junit]
             [eftest.report :as report]
             [metosin.boot-alt-test.util :as util]))
 
@@ -42,26 +38,50 @@
                   load)]
     (assoc tracker ::track/load x)))
 
-(defn declarative-reporter
-  "Configure reporters declaratively.
+(def built-in-reporters
+  {:pretty 'eftest.report.pretty/report
+   :progress 'eftest.report.progress/report
+   :junit 'eftest.report.junit/report})
 
-  :type can be keyword :pretty, :progress or nil (no output)."
-  [{:keys [junit junit-output-to type]}]
+(defn combined-reporter
+  "Combines the reporters by running first one directly,
+  and others with clojure.test/*report-counters* bound to nil."
+  [first & rst]
   (fn [m]
-    (case type
-      :pretty (pretty/report m)
-      :progress (progress/report m)
-      nil nil
-      (throw (ex-info "Bad declarative-reporter :type, should be :pretty, :progress or nil." {:type type})))
-
-    (when junit
+    (first m)
+    (doseq [report rst]
       (binding [clojure.test/*report-counters* nil]
-        (let [r (report/report-to-file junit/report (or junit-output-to "junit.xml"))]
-          (r m))))))
+        (report m)))))
+
+(defn resolve-reporter
+  [report]
+  (cond
+    (vector? report)
+    (let [reporters (doall (map resolve-reporter report))]
+      (apply combined-reporter reporters))
+
+    (map? report)
+    (cond-> (resolve-reporter (:type report))
+      (:output-to report) (report/report-to-file (:output-to report)))
+
+    (keyword? report)
+    (resolve-reporter (or (get built-in-reporters report)
+                          (throw (ex-info "Unknown reporter" {:report report
+                                                              :reporters (keys built-in-reporters)}))))
+
+    (symbol? report)
+    (do (assert (namespace report) "Reporter symbol should be namespaced")
+        (require (symbol (namespace report)))
+        (deref (resolve report)))
+
+    (ifn? report) report
+
+    :else (throw (ex-info "Unknown reporter value, should be keyword, symbol or fn." {:report report}))))
 
 (defn reload-and-test
   [tracker {:keys [on-start-sym test-matcher parallel? report filter-sym]
-            :or {test-matcher #".*test"}}]
+            :or {report :progress
+                 test-matcher #".*test"}}]
   (let [changed-ns (::track/load @tracker)
         tests (filter #(re-matches test-matcher (name %)) changed-ns)
         filter-fn (if filter-sym
@@ -95,12 +115,7 @@
     (runner/run-tests
       (filter filter-fn (runner/find-tests tests))
       (->> {:multithread? parallel?
-            :report (cond
-                      (map? report) (declarative-reporter report)
-                      (symbol? report) (do (require (symbol (namespace report)))
-                                        (deref (resolve report)))
-                      (ifn? report) report
-                      :else (throw (ex-info "Unknown :report value, should be map, symbol or fn." {:report report})))}
+            :report (resolve-reporter report)}
            (remove (comp nil? val))
            (into {})))))
 

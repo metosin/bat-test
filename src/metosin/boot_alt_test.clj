@@ -14,10 +14,17 @@
   Changed namespaces are reloaded using clojure.tools.namespace.
   Only tests in changed or affected namespaces are run.
 
-  Default reporter is eftest.report.progress/report. Some alternatives are:
-  - eftest.report.pretty/report (no progress bar)
-  - clojure.test/report"
-  [m test-matcher VAL regex "Regex used to select test namespaces"
+  Reporter can be either:
+
+  - vector     List of reporters to run, items can be other allowed values
+  - map        Map with property `:type` which can be one of the following options
+               and optional `:output-to` property which will redirect the output
+               to a file.
+  - keyword    Shorthand to use the built-in eftest reporters: :pretty, :progress, :junit
+  - symbol     Symbol pointing to any reporter fn
+
+  Default reporter is :progress."
+  [m test-matcher VAL regex "Regex used to select test namespaces (default #\".*test\")"
    p parallel         bool  "Run tests parallel (default off)"
    r report       VAL edn   "Reporting function"
    f filter       VAL sym   "Function to filter the test vars"
