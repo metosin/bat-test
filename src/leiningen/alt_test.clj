@@ -29,7 +29,7 @@
            (System/exit 1))))
     requires))
 
-(defn- run-compiler
+(defn- run-tests
   "Run the alt-test."
   [project
    options
@@ -102,14 +102,13 @@ Add `:debug` as subtask argument to enable debugging output."
   {:help-arglists '([once auto])
    :subtasks      [#'once #'auto]}
   ([project]
-   (println (help/help-for "alt-test"))
-   (main/abort))
+   (alt-test project nil))
   ([project subtask & args]
    (let [args (set args)
          config (cond-> (:alt-test project)
                   (contains? args ":debug") (assoc :verbosity 2))]
      (case subtask
-       "once" (run-compiler project config false)
-       "auto" (run-compiler project config true)
+       ("once" nil) (run-tests project config false)
+       "auto" (run-tests project config true)
        "help" (println (help/help-for "alt-test"))
        (main/warn "Unknown task.")))))
