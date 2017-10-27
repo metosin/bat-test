@@ -8,7 +8,7 @@
             [clojure.java.io :as io]))
 
 (def profile {:dependencies [['metosin/boot-alt-test "0.4.0-SNAPSHOT"]
-                             ['eftest "0.3.2"]
+                             ['eftest "0.4.0"]
                              ['org.clojure/tools.namespace "0.3.0-alpha3"]
                              ['watchtower "0.1.1"]]})
 
