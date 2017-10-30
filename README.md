@@ -6,22 +6,24 @@ Fast Clojure.test runner for Boot and Lein.
 
 - **Requires tools.namespace 0.3.0-alpha3**
 - Uses [eftest](https://github.com/weavejester/eftest) to display pretty reports
-- Uses [clojure.tools.namespace](https://github.com/clojure/tools.namespace) to reload
-changed namespaces and to run only the tests in changed or affected namespaces
-- Tries to recover from namespace reload errors so that no process restart is needed
-    - This means that after some exceptions all the namespaces have to reloaded
-    - Related: ([CTN-6](http://dev.clojure.org/jira/browse/TNS-6), [CTN-24](http://dev.clojure.org/jira/browse/TNS-24))
-- Run all tests by hitting `enter`
-- Can optionally run tests parallel
-- Two hooks to manage test environment
-    - `on-start` hook: run a function before any tests are run
-    - `on-end` hook: run a function after all tests are run
+    - Can optionally run tests parallel
+    - Can capture output and display the output just for the failing tests (`:capture-output?`, enabled by default)
+    - Can be configured to stop running tests after the first failure (`:fail-fast?`)
 - Easy way to setup and combine eftest reporters:
     - Built-in reporters can be referred by keywords `:pretty`, `:progress` and `:junit`
     - Reporter can be map with `:type` (referring to reporter fn) and option `:output-to`
     which will redirect the output to a file.
     - Multiple reporters can be combined when defining them as vector:
     `(alt-test :report [:pretty {:type :json :output-to "target/junit.xml"}])`
+- Uses [clojure.tools.namespace](https://github.com/clojure/tools.namespace) to reload
+changed namespaces and to run only the tests in changed or affected namespaces
+- Tries to recover from namespace reload errors so that no process restart is needed
+    - This means that after some exceptions all the namespaces have to reloaded
+    - Related: ([CTN-6](http://dev.clojure.org/jira/browse/TNS-6), [CTN-24](http://dev.clojure.org/jira/browse/TNS-24))
+- Run all tests by hitting `enter`
+- Two hooks to manage the test environment
+    - `on-start` hook: run a function before any tests are run
+    - `on-end` hook: run a function after all tests are run
 
 ![Screenshot](./screenshot.png)
 
@@ -34,10 +36,10 @@ changed namespaces and to run only the tests in changed or affected namespaces
     - `lein alt-test :integration`
 - `:notify-command` for calling `notify-send` or Growl or such
 
-## Usage
+## Boot Usage
 
 1. Add `[metosin/boot-alt-test "X.X.X" :scope "test"]` as a dependency in your
-  build.boot.
+  `build.boot`
 
 1. Add `(require '[metosin.boot-alt-test :refer (alt-test)])` somewhere in your
    build.boot to make the task available to your Boot workflow.
@@ -46,20 +48,16 @@ changed namespaces and to run only the tests in changed or affected namespaces
 
 See `boot alt-test -h` for a list of available task options.
 
-### Test result reporter
+## Lein Usage
 
-Boot-alt-test uses [eftest](https://github.com/weavejester/eftest) and by default that uses a test reporter that displays a progress bar of the test run. Your test output can mess this progress bar so you might want to change the used reporter. This can be achieved by providing `report` option and using alternative `pretty` reporter:
+1. Add `[metosin/boot-alt-test "X.X.X"]` as a plugin in your `project.clj`
 
-```
-# From CLI
-$ boot alt-test --report eftest.report.pretty/report
+1. Add options under `:alt-test` key in project map and run `lein alt-test` at the command-line
 
-;; From Clojure
-(alt-test :report 'eftest.report.pretty/report)
-```
+See `lein alt-test help` for a list of available task options.
 
 ## License
 
-Copyright © 2016-2017 Juho Teperi
+Copyright © 2016-2017 [Metosin Oy](http://www.metosin.fi)
 
 Distributed under the Eclipse Public License either version 1.0 or (at your option) any later version.
