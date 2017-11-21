@@ -113,6 +113,17 @@
             vars)
     vars))
 
+(defn maybe-run-cloverage [run-tests opts changed-ns test-namespaces]
+  (if (:cloverage opts)
+    (do (require 'metosin.boot-alt-test.cloverage)
+
+        ((resolve 'metosin.boot-alt-test.cloverage/wrap-cloverage)
+         ;; Don't instrument -test namespaces
+         (remove #(contains? (set test-namespaces) %) changed-ns)
+         (:cloverage-opts opts)
+         run-tests))
+    (run-tests)))
+
 (defn reload-and-test
   [tracker {:keys [on-start test-matcher parallel? report selectors namespaces]
             :or {report :progress
@@ -145,14 +156,19 @@
     ((resolve-hook on-start))
     (util/info "Testing: %s\n" (string/join ", " test-namespaces))
 
-    (runner/run-tests
-      (->> (runner/find-tests test-namespaces)
-           (selectors-match selectors)
-           (filter (resolve-hook (:filter opts))))
-      (-> opts
-          (dissoc :parallel? :on-start :on-end :filter :test-matcher :selectors)
-          (assoc :multithread? parallel?
-                 :report (resolve-reporter report))))))
+    (maybe-run-cloverage
+       (fn []
+         (runner/run-tests
+           (->> (runner/find-tests test-namespaces)
+                (selectors-match selectors)
+                (filter (resolve-hook (:filter opts))))
+           (-> opts
+               (dissoc :parallel? :on-start :on-end :filter :test-matcher :selectors)
+               (assoc :multithread? parallel?
+                      :report (resolve-reporter report)))))
+       opts
+       changed-ns
+       test-namespaces)))
 
 (defn result-message [{:keys [pass error fail]}]
   (if (pos? (+ fail error))

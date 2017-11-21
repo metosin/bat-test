@@ -8,8 +8,9 @@
             [clojure.java.io :as io]))
 
 (def profile {:dependencies [['metosin/boot-alt-test "0.4.0-SNAPSHOT"]
-                             ['eftest "0.4.0"]
-                             ['org.clojure/tools.namespace "0.3.0-alpha3"]
+                             ['eftest "0.4.1"]
+                             ['org.clojure/tools.namespace "0.3.0-alpha4"]
+                             ['cloverage "1.0.10"]
                              ['watchtower "0.1.1"]]})
 
 (defn quoted-namespace [key s]
@@ -96,31 +97,35 @@ Available options:
 :filter          Function to filter the test vars
 :on-start        Function to be called before running tests (after reloading namespaces)
 :on-end          Function to be called after running tests
+:cloverage-opts  Cloverage options
 :notify-command  String or vector describing a command to run after tests
 
 Also supports Lein test selectors, check `lein test help` for more information.
 
 Arguments:
-- once, auto, help
+- once, auto, cloverage, help
 - test selectors"
   {:help-arglists '([& tests])
    :subtasks      [#'once #'auto]}
   [project & args]
-  (let [subtask (or (some #{"auto" "once" "help"} args) "once")
-        args (remove #{"auto" "once" "help"} args)
+  (let [subtask (or (some #{"auto" "once" "help" "cloverage"} args) "once")
+        args (remove #{"auto" "once" "help" "cloverage"} args)
         ;; read-args tries to find namespaces in test-paths if args doesn't contain namespaces
         [namespaces selectors] (test/read-args args (assoc project :test-paths nil))
         project (project/merge-profiles project [:leiningen/test :test profile])
         config (assoc (:alt-test project)
                       :selectors (vec selectors)
-                      :namespaces (mapv (fn [n] `'~n) namespaces))]
+                      :namespaces (mapv (fn [n] `'~n) namespaces)
+                      :cloverage (= "cloverage" subtask))]
     (case subtask
-      "once" (try
-               (when-let [n (run-tests project config false)]
-                 (when (and (number? n) (pos? n))
-                   (throw (ex-info "Tests failed." {:exit-code n}))))
-               (catch clojure.lang.ExceptionInfo e
-                 (main/abort "Tests failed.")))
+      ("once" "cloverage")
+      (try
+        (when-let [n (run-tests project config false)]
+          (when (and (number? n) (pos? n))
+            (throw (ex-info "Tests failed." {:exit-code n}))))
+        (catch clojure.lang.ExceptionInfo e
+          (main/abort "Tests failed.")))
+
       "auto" (run-tests project config true)
       "help" (println (help/help-for "alt-test"))
       (main/warn "Unknown task."))))

@@ -3,8 +3,9 @@
 (set-env!
   :resource-paths #{"src"}
   :dependencies   '[[org.clojure/clojure "1.8.0" :scope "provided"]
-                    [eftest "0.3.1" :scope "test"]
-                    [org.clojure/tools.namespace "0.3.0-alpha3" :scope "test"]])
+                    [eftest "0.4.1" :scope "test"]
+                    [cloverage "1.0.10" :scope "test"]
+                    [org.clojure/tools.namespace "0.3.0-alpha4" :scope "test"]])
 
 (task-options!
   pom {:project     'metosin/boot-alt-test

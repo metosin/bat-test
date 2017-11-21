@@ -24,6 +24,10 @@ changed namespaces and to run only the tests in changed or affected namespaces
 - Two hooks to manage the test environment
     - `on-start` hook: run a function before any tests are run
     - `on-end` hook: run a function after all tests are run
+- [Cloverage](https://github.com/cloverage/cloverage) integration
+    - `cloverage-opts` option to set (subset) of Cloverage options
+    - `boot alt-test -c` or `lein alt-test cloverage`
+    - Probably doesn't work well together with `watch` task
 
 ![Screenshot](./screenshot.png)
 

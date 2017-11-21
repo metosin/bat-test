@@ -5,14 +5,19 @@
             [boot.util :as util]))
 
 (def ^:private deps
-  [['eftest "0.4.0"]
-   ['org.clojure/tools.namespace "0.3.0-alpha3"]])
+  [['eftest "0.4.1"]
+   ['metosin/boot-alt-test "1.0.10"]
+   ['cloverage "1.0.10"]
+   ['org.clojure/tools.namespace "0.3.0-alpha4"]])
 
 (core/deftask alt-test
   "Run clojure.test tests in a pod.
 
   Changed namespaces are reloaded using clojure.tools.namespace.
   Only tests in changed or affected namespaces are run.
+
+  Cloverage report is not supposed to be used when used together
+  with `watch` task.
 
   Reporter can be either:
 
@@ -29,7 +34,9 @@
    r report       VAL edn   "Reporting function"
    f filter       VAL sym   "Function to filter the test vars"
    s on-start     VAL sym   "Function to be called before running tests (after reloading namespaces)"
-   e on-end       VAL sym   "Function to be called after running tests"]
+   e on-end       VAL sym   "Function to be called after running tests"
+   c cloverage        bool  "Enable Cloverage coverage report (default off)"
+   _ cloverage-opts VAL edn "Cloverage options"]
   (let [p (-> (core/get-env)
               (update-in [:dependencies] into deps)
               pod/make-pod
