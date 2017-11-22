@@ -6,7 +6,7 @@
 
 (def ^:private deps
   [['eftest "0.4.1"]
-   ['metosin/boot-alt-test "1.0.10"]
+   ['metosin/boot-alt-test "0.4.0-SNAPSHOT"]
    ['cloverage "1.0.10"]
    ['org.clojure/tools.namespace "0.3.0-alpha4"]])
 
