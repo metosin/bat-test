@@ -2,11 +2,12 @@
   {:boot/export-tasks true}
   (:require [boot.pod :as pod]
             [boot.core :as core]
-            [boot.util :as util]))
+            [boot.util :as util]
+            [metosin.bat-test.version :refer [+version+]]))
 
 (def ^:private deps
   [['eftest "0.4.1"]
-   ['metosin/bat-test "0.4.0-SNAPSHOT"]
+   ['metosin/bat-test +version+]
    ['cloverage "1.0.10"]
    ['org.clojure/tools.namespace "0.3.0-alpha4"]])
 

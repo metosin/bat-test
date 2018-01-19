@@ -5,9 +5,10 @@
             [leiningen.core.main :as main]
             [leiningen.help :as help]
             [leiningen.test :as test]
-            [clojure.java.io :as io]))
+            [clojure.java.io :as io]
+            [metosin.bat-test.version :refer [+version+]]))
 
-(def profile {:dependencies [['metosin/bat-test "0.4.0-SNAPSHOT"]
+(def profile {:dependencies [['metosin/bat-test +version+]
                              ['eftest "0.4.1"]
                              ['org.clojure/tools.namespace "0.3.0-alpha4"]
                              ['cloverage "1.0.10"]
