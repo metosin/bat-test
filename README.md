@@ -1,4 +1,6 @@
-# Boot-alt-test [![Clojars Project](https://img.shields.io/clojars/v/metosin/boot-alt-test.svg)](https://clojars.org/metosin/boot-alt-test)
+# Bat-test [![Clojars Project](https://img.shields.io/clojars/v/metosin/bat-test.svg)](https://clojars.org/metosin/bat-test)
+
+> Formerly known as Boot-alt-test
 
 Fast Clojure.test runner for Boot and Lein.
 
@@ -14,7 +16,7 @@ Fast Clojure.test runner for Boot and Lein.
     - Reporter can be map with `:type` (referring to reporter fn) and option `:output-to`
     which will redirect the output to a file.
     - Multiple reporters can be combined when defining them as vector:
-    `(alt-test :report [:pretty {:type :json :output-to "target/junit.xml"}])`
+    `(bat-test :report [:pretty {:type :json :output-to "target/junit.xml"}])`
 - Uses [clojure.tools.namespace](https://github.com/clojure/tools.namespace) to reload
 changed namespaces and to run only the tests in changed or affected namespaces
 - Tries to recover from namespace reload errors so that no process restart is needed
@@ -26,7 +28,7 @@ changed namespaces and to run only the tests in changed or affected namespaces
     - `on-end` hook: run a function after all tests are run
 - [Cloverage](https://github.com/cloverage/cloverage) integration
     - `cloverage-opts` option to set (subset) of Cloverage options
-    - `boot alt-test -c` or `lein alt-test cloverage`
+    - `boot bat-test -c` or `lein bat-test cloverage`
     - Probably doesn't work well together with `watch` task
 
 ![Screenshot](./screenshot.png)
@@ -35,30 +37,30 @@ changed namespaces and to run only the tests in changed or affected namespaces
 
 - Built-in file change watcher
 - Copies lein-test API, e.g. test-selectors:
-    - `lein alt-test :only namespace/test-var`
-    - `lein alt-test only-this-namespace`
-    - `lein alt-test :integration`
+    - `lein bat-test :only namespace/test-var`
+    - `lein bat-test only-this-namespace`
+    - `lein bat-test :integration`
 - `:notify-command` for calling `notify-send` or Growl or such
 
 ## Boot Usage
 
-1. Add `[metosin/boot-alt-test "X.X.X" :scope "test"]` as a dependency in your
+1. Add `[metosin/bat-test "X.X.X" :scope "test"]` as a dependency in your
   `build.boot`
 
-1. Add `(require '[metosin.boot-alt-test :refer (alt-test)])` somewhere in your
+1. Add `(require '[metosin.bat-test :refer (bat-test)])` somewhere in your
    build.boot to make the task available to your Boot workflow.
 
-1. Run `boot alt-test` at the command-line or `(boot (alt-test))` in the REPL, or add `alt-test` task as part of your Boot pipeline.
+1. Run `boot bat-test` at the command-line or `(boot (bat-test))` in the REPL, or add `bat-test` task as part of your Boot pipeline.
 
-See `boot alt-test -h` for a list of available task options.
+See `boot bat-test -h` for a list of available task options.
 
 ## Lein Usage
 
-1. Add `[metosin/boot-alt-test "X.X.X"]` as a plugin in your `project.clj`
+1. Add `[metosin/bat-test "X.X.X"]` as a plugin in your `project.clj`
 
-1. Add options under `:alt-test` key in project map and run `lein alt-test` at the command-line
+1. Add options under `:bat-test` key in project map and run `lein bat-test` at the command-line
 
-See `lein alt-test help` for a list of available task options.
+See `lein bat-test help` for a list of available task options.
 
 ## License
 

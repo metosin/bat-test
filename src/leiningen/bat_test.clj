@@ -1,4 +1,4 @@
-(ns leiningen.alt-test
+(ns leiningen.bat-test
   (:require [leiningen.help]
             [leiningen.core.eval :as eval]
             [leiningen.core.project :as project]
@@ -7,7 +7,7 @@
             [leiningen.test :as test]
             [clojure.java.io :as io]))
 
-(def profile {:dependencies [['metosin/boot-alt-test "0.4.0-SNAPSHOT"]
+(def profile {:dependencies [['metosin/bat-test "0.4.0-SNAPSHOT"]
                              ['eftest "0.4.1"]
                              ['org.clojure/tools.namespace "0.3.0-alpha4"]
                              ['cloverage "1.0.10"]
@@ -42,7 +42,7 @@
       (if watch?
         `(do
            (System/setProperty "java.awt.headless" "true")
-           (metosin.boot-alt-test.impl/enter-key-listener ~opts)
+           (metosin.bat-test.impl/enter-key-listener ~opts)
            @(watchtower.core/watcher
               ~watch-directories
               (watchtower.core/rate 100)
@@ -50,13 +50,13 @@
               (watchtower.core/file-filter (watchtower.core/extensions :clj :cljc))
               (watchtower.core/on-change (fn [~'_]
                                            (println)
-                                           (metosin.boot-alt-test.impl/run ~opts)))))
-        `(let [summary# (metosin.boot-alt-test.impl/run ~opts)
+                                           (metosin.bat-test.impl/run ~opts)))))
+        `(let [summary# (metosin.bat-test.impl/run ~opts)
                exit-code# (+ (:fail summary# 0) (:error summary# 0))]
            (if ~(= :leiningen (:eval-in project))
              exit-code#
              (System/exit exit-code#))))
-      `(require 'metosin.boot-alt-test.impl 'watchtower.core
+      `(require 'metosin.bat-test.impl 'watchtower.core
                 ~@(used-namespaces opts)))))
 
 ;; For docstrings
@@ -71,7 +71,7 @@
   [project]
   nil)
 
-(defn alt-test
+(defn bat-test
 "Run clojure.test tests.
 
 Changed namespaces are reloaded using clojure.tools.namespace.
@@ -88,7 +88,7 @@ Reporter can be either:
 
 Default reporter is :progress.
 
-Options should be provided using `:alt-test` key in project map.
+Options should be provided using `:bat-test` key in project map.
 
 Available options:
 :test-matcher    Regex used to select test namespaces
@@ -113,7 +113,7 @@ Arguments:
         ;; read-args tries to find namespaces in test-paths if args doesn't contain namespaces
         [namespaces selectors] (test/read-args args (assoc project :test-paths nil))
         project (project/merge-profiles project [:leiningen/test :test profile])
-        config (assoc (:alt-test project)
+        config (assoc (:bat-test project)
                       :selectors (vec selectors)
                       :namespaces (mapv (fn [n] `'~n) namespaces)
                       :cloverage (= "cloverage" subtask))]
@@ -127,5 +127,5 @@ Arguments:
           (main/abort "Tests failed.")))
 
       "auto" (run-tests project config true)
-      "help" (println (help/help-for "alt-test"))
+      "help" (println (help/help-for "bat-test"))
       (main/warn "Unknown task."))))
