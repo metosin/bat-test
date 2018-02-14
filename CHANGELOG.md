@@ -9,6 +9,7 @@
     - Test selector support
     - `:notify-command` option support
 - Cloverage support
+- Update Eftest to version `0.4.3`
 
 ## 0.3.2 (27.4.2017)
 
