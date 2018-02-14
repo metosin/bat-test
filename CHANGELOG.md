@@ -1,4 +1,4 @@
-## 0.4.0 (2017-01-19)
+## 0.4.0 (2017-02-14)
 
 - Renamed to **Bat-test**
     - Artifact-name `boot-alt-test` -> `bat-test`
@@ -10,6 +10,12 @@
     - `:notify-command` option support
 - Cloverage support
 - Update Eftest to version `0.4.3`
+
+**[compare](https://github.com/metosin/boot-alt-test/compare/0.3.2...0.4.0)**
+
+## 0.3.3 (14.2.2017)
+
+- 0.3.2 with rename notice
 
 ## 0.3.2 (27.4.2017)
 
