@@ -8,6 +8,15 @@
             [eftest.report :as report]
             [metosin.boot-alt-test.util :as util]))
 
+(defonce
+  rename-notice
+  (do
+    (println "Boot-alt-test has been renamed to bat-test.")
+    (println "New artifact is metosin/bat-test and the first version of new package is 0.4.0.")
+    (println "For more information and migration guide read:")
+    (println "https://github.com/metosin/bat-test/blob/master/CHANGELOG.md#040-2017-02-14")
+    (println)))
+
 (def tracker (atom nil))
 (def running (atom false))
 
