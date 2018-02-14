@@ -6,7 +6,7 @@
             [metosin.bat-test.version :refer [+version+]]))
 
 (def ^:private deps
-  [['eftest "0.4.1"]
+  [['eftest "0.4.3"]
    ['metosin/bat-test +version+]
    ['cloverage "1.0.10"]
    ['org.clojure/tools.namespace "0.3.0-alpha4"]])
