@@ -1,3 +1,15 @@
+## 0.4.0 (2017-01-19)
+
+- Renamed to **Bat-test**
+    - Artifact-name `boot-alt-test` -> `bat-test`
+    - Boot namespace `metosin.boot-alt-test` -> `metosin.bat-test`
+    - Boot task name `alt-test` -> `bat-test`
+    - Leiningen task name `alt-test` -> `bat-test`
+- Includes Leiningen plugin
+    - Test selector support
+    - `:notify-command` option support
+- Cloverage support
+
 ## 0.3.2 (27.4.2017)
 
 - Update Eftest to version `0.3.1`

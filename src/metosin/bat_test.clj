@@ -1,16 +1,17 @@
-(ns metosin.boot-alt-test
+(ns metosin.bat-test
   {:boot/export-tasks true}
   (:require [boot.pod :as pod]
             [boot.core :as core]
-            [boot.util :as util]))
+            [boot.util :as util]
+            [metosin.bat-test.version :refer [+version+]]))
 
 (def ^:private deps
   [['eftest "0.4.1"]
-   ['metosin/boot-alt-test "0.4.0-SNAPSHOT"]
+   ['metosin/bat-test +version+]
    ['cloverage "1.0.10"]
    ['org.clojure/tools.namespace "0.3.0-alpha4"]])
 
-(core/deftask alt-test
+(core/deftask bat-test
   "Run clojure.test tests in a pod.
 
   Changed namespaces are reloaded using clojure.tools.namespace.
@@ -46,9 +47,9 @@
                     :watch-directories (:directories pod/env))]
     (fn [handler]
       (System/setProperty "java.awt.headless" "true")
-      (pod/with-call-in @p (metosin.boot-alt-test.impl/enter-key-listener ~opts))
+      (pod/with-call-in @p (metosin.bat-test.impl/enter-key-listener ~opts))
       (fn [fileset]
-        (let [summary (pod/with-call-in @p (metosin.boot-alt-test.impl/run ~opts))]
+        (let [summary (pod/with-call-in @p (metosin.bat-test.impl/run ~opts))]
           (if (> (+ (:fail summary 0) (:error summary 0)) 0)
             (throw (ex-info "Tests failed\n" (assoc summary :boot.util/omit-stacktrace? true)))
             (handler fileset)))))))

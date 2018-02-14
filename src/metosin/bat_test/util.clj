@@ -1,4 +1,4 @@
-(ns metosin.boot-alt-test.util)
+(ns metosin.bat-test.util)
 
 ;;
 ;; Debugging

@@ -1,4 +1,4 @@
-(ns metosin.boot-alt-test.impl
+(ns metosin.bat-test.impl
   (:require [clojure.tools.namespace.dir :as dir]
             [clojure.tools.namespace.track :as track]
             [clojure.tools.namespace.reload :as reload]
@@ -6,7 +6,7 @@
             [clojure.string :as string]
             [eftest.runner :as runner]
             [eftest.report :as report]
-            [metosin.boot-alt-test.util :as util]))
+            [metosin.bat-test.util :as util]))
 
 (def tracker (atom nil))
 (def running (atom false))
@@ -115,9 +115,9 @@
 
 (defn maybe-run-cloverage [run-tests opts changed-ns test-namespaces]
   (if (:cloverage opts)
-    (do (require 'metosin.boot-alt-test.cloverage)
+    (do (require 'metosin.bat-test.cloverage)
 
-        ((resolve 'metosin.boot-alt-test.cloverage/wrap-cloverage)
+        ((resolve 'metosin.bat-test.cloverage/wrap-cloverage)
          ;; Don't instrument -test namespaces
          (remove #(contains? (set test-namespaces) %) changed-ns)
          (:cloverage-opts opts)

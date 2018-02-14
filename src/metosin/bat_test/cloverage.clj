@@ -1,4 +1,4 @@
-(ns metosin.boot-alt-test.cloverage
+(ns metosin.bat-test.cloverage
   (:require [clojure.set :as set]
             [clojure.java.io :as io]
             [cloverage.coverage :as cov]
