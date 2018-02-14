@@ -2,7 +2,7 @@
 
 > Formerly known as Boot-alt-test
 
-Fast Clojure.test runner for Boot and Lein.
+Fast Clojure.test runner for [Boot](http://boot-clj.com/) and [Leiningen](https://leiningen.org/).
 
 ## Features
 
