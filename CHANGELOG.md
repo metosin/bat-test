@@ -1,7 +1,10 @@
 ## 0.4.0 (2017-02-14)
 
 - Renamed to **Bat-test**
-    - Artifact-name `boot-alt-test` -> `bat-test`
+    - Since this release includes a Leiningen plugin, this project isn't boot-only anymore.
+      The old name *boot-alt-test* felt misleading, so we decided to rename the project.
+      There should not be API breakage beyond the renamings.
+    - Artifact-name `metosin/boot-alt-test` -> `metosin/bat-test`
     - Boot namespace `metosin.boot-alt-test` -> `metosin.bat-test`
     - Boot task name `alt-test` -> `bat-test`
     - Leiningen task name `alt-test` -> `bat-test`
