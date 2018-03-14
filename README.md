@@ -16,7 +16,7 @@ Fast Clojure.test runner for [Boot](http://boot-clj.com/) and [Leiningen](https:
     - Reporter can be map with `:type` (referring to reporter fn) and option `:output-to`
     which will redirect the output to a file.
     - Multiple reporters can be combined when defining them as vector:
-    `(bat-test :report [:pretty {:type :json :output-to "target/junit.xml"}])`
+    `(bat-test :report [:pretty {:type :junit :output-to "target/junit.xml"}])`
 - Uses [clojure.tools.namespace](https://github.com/clojure/tools.namespace) to reload
 changed namespaces and to run only the tests in changed or affected namespaces
 - Tries to recover from namespace reload errors so that no process restart is needed
