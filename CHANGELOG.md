@@ -1,4 +1,8 @@
-## 0.4.0 (2017-02-14)
+## 0.4.1 (2018-12-14)
+
+- Update Eftest to `0.5.3`
+
+## 0.4.0 (2018-02-14)
 
 - Renamed to **Bat-test**
     - Since this release includes a Leiningen plugin, this project isn't boot-only anymore.
@@ -16,7 +20,7 @@
 
 **[compare](https://github.com/metosin/boot-alt-test/compare/0.3.2...0.4.0)**
 
-## 0.3.3 (14.2.2017)
+## 0.3.3 (14.2.2018)
 
 - 0.3.2 with rename notice
 
