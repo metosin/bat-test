@@ -9,7 +9,7 @@
             [metosin.bat-test.version :refer [+version+]]))
 
 (def profile {:dependencies [['metosin/bat-test +version+]
-                             ['eftest "0.5.3"]
+                             ['eftest "0.5.4"]
                              ['org.clojure/tools.namespace "0.3.0-alpha4"]
                              ['cloverage "1.0.13"]
                              ['watchtower "0.1.1"]]})

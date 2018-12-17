@@ -1,9 +1,9 @@
-(def +version+ "0.4.1")
+(def +version+ "0.4.2")
 
 (set-env!
   :resource-paths #{"src"}
   :dependencies   '[[org.clojure/clojure "1.9.0" :scope "provided"]
-                    [eftest "0.5.3" :scope "test"]
+                    [eftest "0.5.4" :scope "test"]
                     [cloverage "1.0.13" :scope "test"]
                     [org.clojure/tools.namespace "0.3.0-alpha4" :scope "test"]])
 
