@@ -51,7 +51,10 @@
               (watchtower.core/file-filter (watchtower.core/extensions :clj :cljc))
               (watchtower.core/on-change (fn [~'_]
                                            (println)
-                                           (metosin.bat-test.impl/run ~opts)))))
+                                           (try
+                                             (metosin.bat-test.impl/run ~opts)
+                                             (catch Exception e#
+                                               (println e#)))))))
         `(let [summary# (metosin.bat-test.impl/run ~opts)
                exit-code# (+ (:fail summary# 0) (:error summary# 0))]
            (if ~(= :leiningen (:eval-in project))
