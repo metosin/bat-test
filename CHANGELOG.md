@@ -1,10 +1,20 @@
+## Unreleased
+
+- Fix file watch stoppage as a result of compile failures, thanks to [Tommi Kyntola](https://github.com/Kynde). ([#34](https://github.com/metosin/bat-test/issues/34))
+
+**[compare](https://github.com/metosin/boot-alt-test/compare/0.4.2...master)**
+
 ## 0.4.2 (2018-12-14)
 
 - Update Eftest to `0.5.4`
 
+**[compare](https://github.com/metosin/boot-alt-test/compare/0.4.1...0.4.2)**
+
 ## 0.4.1 (2018-12-14)
 
 - Update Eftest to `0.5.3`
+
+**[compare](https://github.com/metosin/boot-alt-test/compare/0.4.0...0.4.1)**
 
 ## 0.4.0 (2018-02-14)
 
