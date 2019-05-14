@@ -64,6 +64,6 @@ See `lein bat-test help` for a list of available task options.
 
 ## License
 
-Copyright © 2016-2018 [Metosin Oy](http://www.metosin.fi)
+Copyright © 2016-2019 [Metosin Oy](http://www.metosin.fi)
 
 Distributed under the Eclipse Public License either version 1.0 or (at your option) any later version.
