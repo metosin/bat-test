@@ -1,6 +1,7 @@
 ## Unreleased
 
 - Fix file watch stoppage as a result of compile failures, thanks to [Tommi Kyntola](https://github.com/Kynde). ([#34](https://github.com/metosin/bat-test/issues/34))
+- Update Eftest to `0.5.7` and Cloverage to `1.1.1`
 
 **[compare](https://github.com/metosin/boot-alt-test/compare/0.4.2...master)**
 
