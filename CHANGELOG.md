@@ -2,6 +2,8 @@
 
 - Update Eftest to `0.5.9`, thanks to [Ivan Kuznetsov](https://github.com/Jeiwan). ([#36](https://github.com/metosin/bat-test/pull/36))
 
+**[compare](https://github.com/metosin/boot-alt-test/compare/0.4.3...0.4.4)**
+
 ## 0.4.3 (2019-05-14)
 
 - Fix file watch stoppage as a result of compile failures, thanks to [Tommi Kyntola](https://github.com/Kynde). ([#34](https://github.com/metosin/bat-test/issues/34))
