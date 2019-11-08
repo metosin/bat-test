@@ -11,6 +11,7 @@ Fast Clojure.test runner for [Boot](http://boot-clj.com/) and [Leiningen](https:
     - Can optionally run tests parallel
     - Can capture output and display the output just for the failing tests (`:capture-output?`, enabled by default)
     - Can be configured to stop running tests after the first failure (`:fail-fast?`)
+    - Can run tests in deterministically random order (`:randomize-seed`, defaults to 0)
 - Easy way to setup and combine eftest reporters:
     - Built-in reporters can be referred by keywords `:pretty`, `:progress` and `:junit`
     - Reporter can be map with `:type` (referring to reporter fn) and option `:output-to`
