@@ -46,7 +46,7 @@
            (metosin.bat-test.impl/enter-key-listener ~opts)
            @(watchtower.core/watcher
               ~watch-directories
-              (watchtower.core/rate 100)
+              (watchtower.core/rate (:rate ~opts 100))
               (watchtower.core/file-filter watchtower.core/ignore-dotfiles)
               (watchtower.core/file-filter (watchtower.core/extensions :clj :cljc))
               (watchtower.core/on-change (fn [~'_]
@@ -103,6 +103,7 @@ Available options:
 :on-end          Function to be called after running tests
 :cloverage-opts  Cloverage options
 :notify-command  String or vector describing a command to run after tests
+:rate            Timeout for file change scanning
 
 Also supports Lein test selectors, check `lein test help` for more information.
 

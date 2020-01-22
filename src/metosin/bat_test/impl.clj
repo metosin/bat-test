@@ -155,7 +155,6 @@
 
     ((resolve-hook on-start))
     (util/info "Testing: %s\n" (string/join ", " test-namespaces))
-
     (maybe-run-cloverage
        (fn []
          (runner/run-tests
@@ -163,7 +162,7 @@
                 (selectors-match selectors)
                 (filter (resolve-hook (:filter opts))))
            (-> opts
-               (dissoc :parallel? :on-start :on-end :filter :test-matcher :selectors)
+               (dissoc :parallel? :on-start :on-end :filter :test-matcher :selectors :rate)
                (assoc :multithread? parallel?
                       :report (resolve-reporter report)))))
        opts
