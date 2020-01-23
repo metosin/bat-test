@@ -49,8 +49,7 @@
                                :filter hawk.core/file?
                                :context (constantly 0)
                                :handler (fn [~'ctx ~'e]
-                                          (if (and (clojure.string/ends-with? (.getName (:file ~'e)) ".clj")
-                                                   (= :modify (:kind ~'e))
+                                          (if (and (re-matches #"^[^.].*[.]cljc?$" (.getName (:file ~'e)))
                                                    (< (+ ~'ctx 1000) (System/currentTimeMillis)))
                                             (try
                                               (println)
