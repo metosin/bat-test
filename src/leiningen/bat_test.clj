@@ -12,7 +12,7 @@
                              ['eftest "0.5.9"]
                              ['org.clojure/tools.namespace "0.3.0-alpha4"]
                              ['cloverage "1.0.13"]
-                             ['watchtower "0.1.1"]]})
+                             ['hawk "0.2.11"]]})
 
 (defn quoted-namespace [key s]
   (try
@@ -43,24 +43,27 @@
       (if watch?
         `(do
            (System/setProperty "java.awt.headless" "true")
+           (metosin.bat-test.impl/run ~opts)
            (metosin.bat-test.impl/enter-key-listener ~opts)
-           @(watchtower.core/watcher
-              ~watch-directories
-              (watchtower.core/rate 100)
-              (watchtower.core/file-filter watchtower.core/ignore-dotfiles)
-              (watchtower.core/file-filter (watchtower.core/extensions :clj :cljc))
-              (watchtower.core/on-change (fn [~'_]
-                                           (println)
-                                           (try
-                                             (metosin.bat-test.impl/run ~opts)
-                                             (catch Exception e#
-                                               (println e#)))))))
+           (hawk.core/watch! [{:paths ~watch-directories
+                               :filter hawk.core/file?
+                               :context (constantly 0)
+                               :handler (fn [~'ctx ~'e]
+                                          (if (and (re-matches #"^[^.].*[.]cljc?$" (.getName (:file ~'e)))
+                                                   (< (+ ~'ctx 1000) (System/currentTimeMillis)))
+                                            (try
+                                              (println)
+                                              (metosin.bat-test.impl/run ~opts)
+                                              (System/currentTimeMillis)
+                                              (catch Exception e#
+                                                (println e#)))
+                                            ~'ctx))}]))
         `(let [summary# (metosin.bat-test.impl/run ~opts)
                exit-code# (+ (:fail summary# 0) (:error summary# 0))]
            (if ~(= :leiningen (:eval-in project))
              exit-code#
              (System/exit exit-code#))))
-      `(require 'metosin.bat-test.impl 'watchtower.core
+      `(require 'metosin.bat-test.impl 'hawk.core
                 ~@(used-namespaces opts)))))
 
 ;; For docstrings
