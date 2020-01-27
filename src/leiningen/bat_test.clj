@@ -51,12 +51,13 @@
                                :handler (fn [~'ctx ~'e]
                                           (if (and (re-matches #"^[^.].*[.]cljc?$" (.getName (:file ~'e)))
                                                    (< (+ ~'ctx 1000) (System/currentTimeMillis)))
-                                            (try
-                                              (println)
-                                              (metosin.bat-test.impl/run ~opts)
-                                              (System/currentTimeMillis)
-                                              (catch Exception e#
-                                                (println e#)))
+                                            (do
+                                              (try
+                                                (println)
+                                                (metosin.bat-test.impl/run ~opts)
+                                                (catch Exception e#
+                                                  (println e#)))
+                                              (System/currentTimeMillis))
                                             ~'ctx))}]))
         `(let [summary# (metosin.bat-test.impl/run ~opts)
                exit-code# (+ (:fail summary# 0) (:error summary# 0))]
