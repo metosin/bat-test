@@ -60,7 +60,7 @@
                                               (System/currentTimeMillis))
                                             ~'ctx))}]))
         `(let [summary# (metosin.bat-test.impl/run ~opts)
-               exit-code# (+ (:fail summary# 0) (:error summary# 0))]
+               exit-code# (min 1 (+ (:fail summary# 0) (:error summary# 0)))]
            (if ~(= :leiningen (:eval-in project))
              exit-code#
              (System/exit exit-code#))))
