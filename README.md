@@ -118,7 +118,7 @@ You can share this file with Leiningen like so:
 ```clojure
 ; project.clj
 (defproject ...
-  :selectors ~(-> "selectors.clj" slurp read-string))
+  :test-selectors ~(-> "selectors.clj" slurp read-string))
 ```
 
 ## REPL Usage
