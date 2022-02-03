@@ -1,9 +1,16 @@
-name: Example workflow
+name: Test
 
-on: [push]
+on:
+  push:
+    branches:
+      - master
+  pull_request:
 
 jobs:
-  clojure:
+  test:
+    strategy:
+      matrix:
+        jdk: ['8', '11', '17']
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -11,8 +18,10 @@ jobs:
       - name: Cache local Maven repository
         uses: actions/cache@v2
         with:
-          path: ~/.m2/repository
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/project.clj') }}
+          path: |
+            ~/.m2/repository
+            ~/.gitlibs
+          key: ${{ runner.os }}-maven-${{ hashFiles('deps.edn') }}
           restore-keys: |
             ${{ runner.os }}-maven-
 
@@ -20,7 +29,7 @@ jobs:
         uses: actions/setup-java@v2
         with:
           distribution: 'temurin'
-          java-version: '11'
+          java-version: ${{ matrix.jdk }}
 
       - name: Install clojure tools
         uses: DeLaGuardo/setup-clojure@3.7
