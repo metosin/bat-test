@@ -276,10 +276,6 @@
         (string? (:test-matcher args))
         (update :test-matcher re-pattern))))
 
-(def -default-main-args
-  {:headless true
-   :enter-key-listener true})
-
 (defn test
   "Run tests with some useful defaults for REPL usage.
 
@@ -290,17 +286,19 @@
   - :parallel        Alias for `:parallel?`
   - :capture-output  Alias for `:capture-output?`
   - :test-matcher    Can be a string.
-  - :headless        Defaults to true.
-  - :enter-key-listener Defaults to true.
   - :system-exit  If true and :watch is not true, exit via System/exit (code 0 if tests pass, 1 on failure).
                   If not true and :watch is not true, throw an exception if tests fail.
                   Default: nil"
   [args]
-  (let [args (into -default-main-args
-                   (massage-cli-args args))]
+  (let [args (massage-cli-args args)]
     (if (:watch args)
       (run-tests args)
       (-wrap-run-tests1 args))))
+
+(def -default-exec-args
+  {:headless true
+   :enter-key-listener true
+   :system-exit true})
 
 (defn exec
   "Run tests via Clojure CLI's -X flag.
@@ -311,8 +309,10 @@
   
   Supports the same options of `metosin.bat-test.cli/test`, except
   for the following differences:
+  - :headless        Defaults to true.
+  - :enter-key-listener Defaults to true.
   - :system-exit  Defaults to true for cleaner output."
   [args]
-  (-> {:system-exit true}
+  (-> -default-exec-args
       (into args)
       test))
