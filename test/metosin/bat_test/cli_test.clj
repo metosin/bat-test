@@ -8,7 +8,7 @@
   (let [sh #(apply sh/sh (concat % [:dir "test-projects/cli-fail"]))]
     ;; different ways of running all tests
     (doseq [cmd [["clojure" "-X:test"]
-                 ["clojure" "-X:test" ":system-exit" "true"]
+                 ["clojure" "-X:test" ":system-exit" "false"]
                  ["clojure" "-X:test" ":test-matcher-directories" "[\"test-pass\" \"test-fail\"]"]
                  ["clojure" "-X:test" ":selectors" "[cli-fail.test-fail cli-fail.test-pass]"]
                  ;; selectors from test-selectors.clj
@@ -24,7 +24,7 @@
           (is (str/includes? out "2 assertions, 1 failure, 0 errors") (pr-str res)))))
     ;; different ways of just running `cli-fail.test-fail/i-fail`
     (doseq [cmd [["clojure" "-X:test" ":test-matcher-directories" "[\"test-fail\"]"]
-                 ["clojure" "-X:test" ":test-matcher-directories" "[\"test-fail\"]" ":system-exit" "true"]
+                 ["clojure" "-X:test" ":test-matcher-directories" "[\"test-fail\"]" ":system-exit" "false"]
                  ["clojure" "-X:test" ":selectors" "[cli-fail.test-fail]"]
                  ["clojure" "-X:test" ":selectors" "[:just-failing]"]
                  ["clojure" "-X:test" ":selectors" "[:only cli-fail.test-fail/i-fail]"]
@@ -36,7 +36,7 @@
           (is (str/includes? out "1 assertion, 1 failure, 0 errors") (pr-str res)))))
     ;; different ways of just running `cli-fail.test-pass/i-pass`
     (doseq [cmd [["clojure" "-X:test" ":test-matcher-directories" "[\"test-pass\"]"]
-                 ["clojure" "-X:test" ":test-matcher-directories" "[\"test-pass\"]" ":system-exit" "true"]
+                 ["clojure" "-X:test" ":test-matcher-directories" "[\"test-pass\"]" ":system-exit" "false"]
                  ["clojure" "-X:test" ":selectors" "[cli-fail.test-pass]"]
                  ["clojure" "-X:test" ":selectors" "[:just-passing]"]
                  ["clojure" "-X:test" ":selectors" "[:only cli-fail.test-pass/i-pass]"]

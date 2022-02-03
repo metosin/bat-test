@@ -126,7 +126,7 @@ You can share this file with Leiningen like so:
 Almost identical to Clojure CLI usage (above), except use `metosin.bat-test.cli/test`.
 
 The major difference is that `test` throws exceptions, whereas `metosin.bat-test.cli/exec` uses `System/exit` (you don't
-want this at the REPL.
+want this at the REPL).
 
 You may want to create your own wrapper to provide some default arguments:
 
