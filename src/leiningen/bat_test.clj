@@ -107,6 +107,8 @@ Available options:
 :on-end          Function to be called after running tests
 :cloverage-opts  Cloverage options
 :notify-command  String or vector describing a command to run after tests
+:test-matcher-directories    Vector of paths restricting the tests that will be matched. Relative to project root.
+                             Default: nil (no restrictions).
 
 Also supports Lein test selectors, check `lein test help` for more information.
 

@@ -1,12 +1,15 @@
 (ns metosin.bat-test.impl
   (:require [clojure.tools.namespace.dir :as dir]
+            [clojure.tools.namespace.find :as find]
             [clojure.tools.namespace.track :as track]
             [clojure.tools.namespace.reload :as reload]
+            [clojure.java.io :as io]
             [clojure.java.shell :refer [sh]]
             [clojure.string :as string]
             [eftest.runner :as runner]
             [eftest.report :as report]
-            [metosin.bat-test.util :as util]))
+            [metosin.bat-test.util :as util])
+  (:import [java.util.regex Pattern]))
 
 (def tracker (atom nil))
 (def running (atom false))
@@ -124,13 +127,59 @@
          run-tests))
     (run-tests)))
 
+(defn test-matcher-only-in-directories [test-matcher
+                                        test-matcher-directories]
+  {:pre [(instance? java.util.regex.Pattern test-matcher)
+         (or (nil? test-matcher-directories)
+             (coll? test-matcher-directories))]
+   :post [(instance? java.util.regex.Pattern %)]}
+  (let [re-and (fn [rs]
+                 {:pre [(every? #(instance? java.util.regex.Pattern %) rs)]
+                  :post [(instance? java.util.regex.Pattern %)]}
+                 (case (count rs)
+                   0 #".*"
+                   1 (first rs)
+                   ;; lookaheads
+                   ;; https://www.ocpsoft.org/tutorials/regular-expressions/and-in-regex/
+                   ;; https://stackoverflow.com/a/470602
+                   (re-pattern (str "^"
+                                    (apply str (map #(str "(?=" % ")") rs))
+                                    ".*" ;; I think lookaheads don't consume anything..or something. see SO answer.
+                                    "$"))))]
+    (re-and
+      (remove nil?
+              [test-matcher
+               ;; if test-matcher-directories is nil, don't change test-matcher
+               ;; otherwise, it's a seqable of zero or more directories that a test must
+               ;; be in to run.
+               (when (some? test-matcher-directories)
+                 ;; both restricts the tests being run and stops
+                 ;; bat-test.impl/load-only-loaded-and-test-ns from loading
+                 ;; all test namespaces if only a subset are specified by
+                 ;; `test-matcher-directories`.
+                 (if-some [matching-ns-res (->> test-matcher-directories
+                                                (map io/file)
+                                                find/find-namespaces
+                                                (map name)
+                                                ;; TODO may want to further filter these files via a pattern
+                                                ;(filter #(string/includes? % "test"))
+                                                (map #(str "^" (Pattern/compile % Pattern/LITERAL) "$"))
+                                                seq)]
+                   (->> matching-ns-res
+                        (string/join "|")
+                        re-pattern)
+                   ;; no namespaces in these directories, match nothing
+                   ;;   https://stackoverflow.com/a/2930209
+                   ;;   negative lookahead that matches anything. never matches.
+                   #"(?!.*)"))]))))
+
 (defn reload-and-test
-  [tracker {:keys [on-start test-matcher parallel? report selectors namespaces]
+  [tracker {:keys [on-start test-matcher parallel? report selectors namespaces test-matcher-directories]
             :or {report :progress
                  test-matcher #".*test"}
             :as opts}]
-  (let [parallel? (true? parallel?)
-
+  (let [test-matcher (test-matcher-only-in-directories test-matcher test-matcher-directories)
+        parallel? (true? parallel?)
         changed-ns (::track/load @tracker)
         test-namespaces (->> changed-ns
                              (filter #(re-matches test-matcher (name %)))
@@ -163,7 +212,7 @@
                 (selectors-match selectors)
                 (filter (resolve-hook (:filter opts))))
            (-> opts
-               (dissoc :parallel? :on-start :on-end :filter :test-matcher :selectors)
+               (dissoc :parallel? :on-start :on-end :filter :test-matcher :selectors :test-matcher-directories)
                (assoc :multithread? parallel?
                       :report (resolve-reporter report)))))
        opts

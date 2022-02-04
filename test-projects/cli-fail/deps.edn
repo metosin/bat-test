@@ -3,4 +3,5 @@
                   :extra-deps {metosin/bat-test {:local/root "../.."
                                                  :deps/manifest :deps}}
                   :exec-fn metosin.bat-test.cli/exec
-                  :exec-args {:test-selectors-form-file "test-selectors.clj"}}}}
+                  :exec-args {:test-selectors-form-file "test-selectors.clj"
+                              :test-matcher-directories ["test-fail" "test-pass"]}}}}

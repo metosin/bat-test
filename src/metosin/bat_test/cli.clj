@@ -8,8 +8,7 @@
             [clojure.tools.namespace.find :refer [find-namespaces]]
             [hawk.core :as hawk]
             [metosin.bat-test.impl :as impl]
-            [metosin.bat-test.util :as util])
-  (:import [java.util.regex Pattern]))
+            [metosin.bat-test.util :as util]))
 
 ;; https://github.com/technomancy/leiningen/blob/4d8ee78018158c05d69b250e7851f9d7c3a44fac/src/leiningen/test.clj#L162-L175
 (def ^:private -only-form
@@ -74,12 +73,7 @@
                 (fn [watch-directories]
                   (or (not-empty watch-directories)
                       (->> (str/split (java.lang.System/getProperty "java.class.path") #":")
-                           (remove #(str/ends-with? % ".jar"))))))
-        (update :test-matcher-directories
-                (fn [test-matcher-directories]
-                  (or (not-empty test-matcher-directories)
-                      ;; default to watching the entire project
-                      ["."]))))))
+                           (remove #(str/ends-with? % ".jar")))))))))
 
 ;; https://github.com/technomancy/leiningen/blob/4d8ee78018158c05d69b250e7851f9d7c3a44fac/src/leiningen/test.clj#L177-L180
 (defn- -convert-to-ns
@@ -137,38 +131,7 @@
           ;; convert from `lein test`-style :selectors to internal bat-test representation.
           ;; done just before calling bat-test to avoid mistakes.
           (assoc :selectors selectors)
-          (assoc :namespaces namespaces)
-          ;; further restrict test-matcher based on :test-matcher-directories
-          (update :test-matcher (fn [test-matcher]
-                                  (let [re-and (fn [rs]
-                                                 {:pre [(every? #(instance? java.util.regex.Pattern %) rs)]
-                                                  :post [(instance? java.util.regex.Pattern %)]}
-                                                 (case (count rs)
-                                                   0 #".*"
-                                                   1 (first rs)
-                                                   ;; lookaheads
-                                                   ;; https://www.ocpsoft.org/tutorials/regular-expressions/and-in-regex/
-                                                   ;; https://stackoverflow.com/a/470602
-                                                   (re-pattern (str "^"
-                                                                    (apply str (map #(str "(?=" % ")") rs))
-                                                                    ".*" ;; I think lookaheads don't consume anything..or something. see SO answer.
-                                                                    "$"))))]
-                                    (re-and
-                                      (remove nil?
-                                              [test-matcher
-                                               ;; both restricts the tests being run and stops
-                                               ;; bat-test.impl/load-only-loaded-and-test-ns from loading
-                                               ;; all test namespaces if only a subset are specified by
-                                               ;; `test-matcher-directories`.
-                                               (->> test-matcher-directories
-                                                    (map io/file)
-                                                    find-namespaces
-                                                    (map name)
-                                                    ;; TODO may want to further filter these files via a pattern
-                                                    ;(filter #(str/includes? % "test"))
-                                                    (map #(str "^" (Pattern/compile % Pattern/LITERAL) "$"))
-                                                    (str/join "|")
-                                                    re-pattern)])))))))))
+          (assoc :namespaces namespaces)))))
 
 ;; https://github.com/metosin/bat-test/blob/636a9964b02d4b4e5665fa83fea799fcc12e6f5f/src/metosin/bat_test/impl.clj#L24-L32
 (defn ^:private -enter-key-listener
@@ -220,9 +183,9 @@
                      Only meaningful when :watch is true.
                      Defaults to all non-jar classpath entries.
   :test-matcher-directories  Vector of paths restricting the tests that will be matched. Relative to project root.
-                             Defaults to [\".\"].
+                             Default: nil (no restrictions).
   :headless           If true, set -Djava.awt.headless=true. Default: false. Only meaningful when :watch is true.
-  :enter-key-listener If true, refresh tracker on enter key. Default: false.  Only meaningful when :watch is true."
+  :enter-key-listener If true, refresh tracker on enter key. Default: false. Only meaningful when :watch is true."
   [& args]
   ;; based on https://github.com/metosin/bat-test/blob/636a9964b02d4b4e5665fa83fea799fcc12e6f5f/src/leiningen/bat_test.clj#L36
   (let [opts (-default-opts args)]
