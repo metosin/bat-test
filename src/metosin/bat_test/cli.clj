@@ -114,17 +114,20 @@
       (throw (ex-info "Could not find test selectors.")))
     [nses selectors-or-default]))
 
+(defn opts->selectors [{:keys [only selectors] :as _opts}]
+  (-> []
+      (cond-> only (conj :only only))
+      (into selectors)))
+
 (defn- run-tests1
   "Run tests in :test-matcher-directories. Takes the same options as `run-tests`.
   
   Returns a test summary {:fail <num-tests-failed> :error <num-tests-errored>}"
   [opts]
-  (let [{:keys [selectors test-matcher-directories only] :as opts} opts
+  (let [{:keys [test-matcher-directories] :as opts} opts
         opts (dissoc opts :only)
         [namespaces selectors] (-lein-test-read-args opts
-                                                     (-> []
-                                                         (cond-> only (conj :only only))
-                                                         (into selectors))
+                                                     (opts->selectors opts)
                                                      (:paths opts))]
     (impl/run
       (-> opts

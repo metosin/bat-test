@@ -1,11 +1,14 @@
 (ns leiningen.bat-test
+  (:refer-clojure :exclude [read-string])
   (:require [leiningen.help]
             [leiningen.core.eval :as eval]
             [leiningen.core.project :as project]
             [leiningen.core.main :as main]
             [leiningen.help :as help]
             [leiningen.test :as test]
+            [clojure.edn :refer [read-string]]
             [clojure.java.io :as io]
+            [metosin.bat-test.cli :as cli]
             [metosin.bat-test.version :refer [+version+]]))
 
 (def profile {:dependencies [['metosin/bat-test +version+]
@@ -34,17 +37,18 @@
     on-end (conj (quoted-namespace :on-end on-end))))
 
 (defn- run-tests [project opts watch?]
-  (let [watch-directories (vec (concat (:test-paths project)
-                                       (:source-paths project)
-                                       (:resource-paths project)))
+  (let [watch-directories (or (:watch-directories opts)
+                              (vec (concat (:test-paths project)
+                                           (:source-paths project)
+                                           (:resource-paths project))))
         opts (assoc opts :watch-directories watch-directories)]
     (eval/eval-in-project
       project
       (if watch?
-        `(do
+        `(let [opts# ~opts]
            (System/setProperty "java.awt.headless" "true")
-           (metosin.bat-test.impl/run ~opts)
-           (metosin.bat-test.impl/enter-key-listener ~opts)
+           (metosin.bat-test.impl/run opts#)
+           (metosin.bat-test.impl/enter-key-listener opts#)
            (hawk.core/watch! [{:paths ~watch-directories
                                :filter hawk.core/file?
                                :context (constantly 0)
@@ -54,7 +58,7 @@
                                             (do
                                               (try
                                                 (println)
-                                                (metosin.bat-test.impl/run ~opts)
+                                                (metosin.bat-test.impl/run opts#)
                                                 (catch Exception e#
                                                   (println e#)))
                                               (System/currentTimeMillis))
@@ -115,29 +119,53 @@ Also supports Lein test selectors, check `lein test help` for more information.
 
 Arguments:
 - once, auto, cloverage, help
-- test selectors"
+- test selectors
+
+If first argument is a keyword or with no arguments, provides the same interface as metosin.bat-test.cli/exec."
   {:help-arglists '([& tests])
    :subtasks      [#'once #'auto]}
   [project & args]
-  (let [subtask (or (some #{"auto" "once" "help" "cloverage"} args) "once")
-        args (remove #{"auto" "once" "help" "cloverage"} args)
+  (let [[subtask args] (or (when (empty? args)
+                             ['cli args])
+                           (when-some [op (some-> (first args) read-string)]
+                             (if (keyword? op)
+                               ['cli args]
+                               [('#{auto once help cloverage} op)
+                                (next args)]))
+                           ['once (next args)])
+        cli? (= 'cli subtask)
+        args (if cli?
+               (do (assert (even? (count args)) (str "Uneven arguments to bat-test command line interface: "
+                                                     (pr-str args)))
+                   (into {}
+                         (map (fn [[k v]] [(read-string k) (read-string v)]))
+                         (partition 2 args)))
+               args)
         ;; read-args tries to find namespaces in test-paths if args doesn't contain namespaces
-        [namespaces selectors] (test/read-args args (assoc project :test-paths nil))
+        [namespaces selectors] (test/read-args
+                                 (if (= 'cli subtask)
+                                   (mapv pr-str (cli/opts->selectors args))
+                                   args)
+                                 (assoc project :test-paths nil))
         project (project/merge-profiles project [:leiningen/test :test profile])
         config (-> {:enter-key-listener true}
                    (into (:bat-test project))
+                   (assoc :cloverage (= 'cloverage subtask))
+                   (into (when cli? args))
                    (assoc :selectors (vec selectors)
-                          :namespaces (mapv (fn [n] `'~n) namespaces)
-                          :cloverage (= "cloverage" subtask)))]
+                          :namespaces (mapv (fn [n] `'~n) namespaces)))
+        do-once #(try
+                   (when-let [n (run-tests project config false)]
+                     (when (and (number? n) (pos? n))
+                       (throw (ex-info "Tests failed." {:exit-code n}))))
+                   (catch clojure.lang.ExceptionInfo e
+                     (main/abort "Tests failed.")))
+        do-watch #(run-tests project config true)]
     (case subtask
-      ("once" "cloverage")
-      (try
-        (when-let [n (run-tests project config false)]
-          (when (and (number? n) (pos? n))
-            (throw (ex-info "Tests failed." {:exit-code n}))))
-        (catch clojure.lang.ExceptionInfo e
-          (main/abort "Tests failed.")))
-
-      "auto" (run-tests project config true)
-      "help" (println (help/help-for "bat-test"))
+      (once cloverage) (do-once)
+      auto (do-watch)
+      help (println (help/help-for "bat-test"))
+      cli ((if (:watch config)
+             do-watch
+             do-once))
       (main/warn "Unknown task."))))
