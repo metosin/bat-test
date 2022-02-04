@@ -38,15 +38,18 @@
    s on-start     VAL sym   "Function to be called before running tests (after reloading namespaces)"
    e on-end       VAL sym   "Function to be called after running tests"
    c cloverage        bool  "Enable Cloverage coverage report (default off)"
+   l enter-key-listener bool   "If true, refresh tracker on enter key (default true). Only meaningful when `parallel` is true."
    _ cloverage-opts VAL edn "Cloverage options"]
   (let [p (-> (core/get-env)
               (update-in [:dependencies] into deps)
               pod/make-pod
               future)
-        opts (cond-> (assoc *opts*
-                            :verbosity (deref util/*verbosity*)
-                            :watch-directories (:directories pod/env))
-               (some? test-matcher-directories) (assoc :test-matcher-directories test-matcher-directories))]
+        opts (-> {:enter-key-listener true}
+                 (into *opts*)
+                 (assoc :verbosity (deref util/*verbosity*)
+                        :watch-directories (:directories pod/env))
+                 (cond-> 
+                   (some? test-matcher-directories) (assoc :test-matcher-directories test-matcher-directories)))]
     (fn [handler]
       (System/setProperty "java.awt.headless" "true")
       (pod/with-call-in @p (metosin.bat-test.impl/enter-key-listener ~opts))

@@ -133,17 +133,6 @@
           (assoc :selectors selectors)
           (assoc :namespaces namespaces)))))
 
-;; https://github.com/metosin/bat-test/blob/636a9964b02d4b4e5665fa83fea799fcc12e6f5f/src/metosin/bat_test/impl.clj#L24-L32
-(defn ^:private -enter-key-listener
-  [opts]
-  (impl/on-keypress
-   java.awt.event.KeyEvent/VK_ENTER
-   (fn [_]
-     (when-not @impl/running
-       (util/info "Running all tests\n")
-       (reset! impl/tracker nil)
-       (run-tests1 opts)))))
-
 (defn run-tests
   "Run tests. 
 
@@ -194,8 +183,10 @@
                       (when (:headless opts)
                         (System/setProperty "java.awt.headless" "true"))
                       (run-tests1 opts)
-                      (when (:enter-key-listener opts)
-                        (-enter-key-listener opts))
+                      (impl/enter-key-listener opts
+                                               (fn [opts]
+                                                 (reset! impl/tracker nil)
+                                                 (run-tests1 opts)))
                       (hawk/watch! [{:paths watch-directories
                                      :filter hawk/file?
                                      :context (constantly 0)

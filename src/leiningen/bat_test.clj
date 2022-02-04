@@ -109,6 +109,7 @@ Available options:
 :notify-command  String or vector describing a command to run after tests
 :test-matcher-directories    Vector of paths restricting the tests that will be matched. Relative to project root.
                              Default: nil (no restrictions).
+:enter-key-listener If true, refresh tracker on enter key. Default: true. Only meaningful via `auto` subtask.
 
 Also supports Lein test selectors, check `lein test help` for more information.
 
@@ -123,10 +124,11 @@ Arguments:
         ;; read-args tries to find namespaces in test-paths if args doesn't contain namespaces
         [namespaces selectors] (test/read-args args (assoc project :test-paths nil))
         project (project/merge-profiles project [:leiningen/test :test profile])
-        config (assoc (:bat-test project)
-                      :selectors (vec selectors)
-                      :namespaces (mapv (fn [n] `'~n) namespaces)
-                      :cloverage (= "cloverage" subtask))]
+        config (-> {:enter-key-listener true}
+                   (into (:bat-test project))
+                   (assoc :selectors (vec selectors)
+                          :namespaces (mapv (fn [n] `'~n) namespaces)
+                          :cloverage (= "cloverage" subtask)))]
     (case subtask
       ("once" "cloverage")
       (try

@@ -25,14 +25,16 @@
         (recur (read-in))))))
 
 (defn enter-key-listener
-  [opts]
-  (util/dbug "Listening to the enter key\n")
-  (on-keypress
-   java.awt.event.KeyEvent/VK_ENTER
-   (fn [_]
-     (when-not @running
-       (util/info "Running all tests\n")
-       (run-all opts)))))
+  ([opts] (enter-key-listener opts #'run-all))
+  ([opts run-all]
+   (when (:enter-key-listener opts)
+     (util/dbug "Listening to the enter key\n")
+     (on-keypress
+       java.awt.event.KeyEvent/VK_ENTER
+       (fn [_]
+         (when-not @running
+           (util/info "Running all tests\n")
+           (run-all opts)))))))
 
 (defn load-only-loaded-and-test-ns
   [{:keys [::track/load] :as tracker} test-matcher]
