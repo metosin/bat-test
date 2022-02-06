@@ -35,7 +35,7 @@ jobs:
         uses: DeLaGuardo/setup-clojure@3.7
         with:
           cli: latest
-          #lein: latest
-          #boot: latest
+          lein: latest
+          boot: latest
       - name: Clojure CLI tests
         run: clojure -X:test

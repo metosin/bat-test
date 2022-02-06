@@ -11,3 +11,4 @@ pom.xml.asc
 .hg/
 .nrepl-history
 .cpcache
+test-projects/*/target

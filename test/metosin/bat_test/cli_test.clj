@@ -4,6 +4,16 @@
             [metosin.bat-test.cli :as cli]
             [clojure.java.shell :as sh]))
 
+(defn prep-cmds
+  ([cmd] (test-cmds #{:cli :lein} cmd))
+  ([impls cmd]
+   {:post [(seq %)]}
+   (cond-> []
+     (:cli impls) (conj (into ["clojure" "-X:test"] cmd))
+     (:lein impls) (conj (into [;; FIXME might need to use :env
+                                "LEIN_USE_BOOTCLASSPATH=no" ;; jvm 17 support for fipp https://github.com/brandonbloom/fipp/issues/60
+                                "lein" "bat-test"] cmd)))))
+
 (deftest cli-fail-test
   (let [sh #(apply sh/sh (concat % [:dir "test-projects/cli-fail"]))]
     ;; different ways of running all tests
