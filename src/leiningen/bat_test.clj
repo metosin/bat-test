@@ -141,7 +141,6 @@ eg., lein bat-test : :parallel? true"
                          (map (fn [[k v]] [(read-string k) (read-string v)]))
                          (partition 2 args)))
                args)
-        _ (prn cli? args)
         ;; read-args tries to find namespaces in test-paths if args doesn't contain namespaces
         [namespaces selectors] (test/read-args
                                  (if cli?

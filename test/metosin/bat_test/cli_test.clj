@@ -13,7 +13,7 @@
      (:lein impls) (conj (into ["lein" "bat-test" ":"] cmd)))))
 
 (defn sh-in-dir [dir cmd]
-  (apply sh/sh (concat cmd [:dir 
+  (apply sh/sh (concat cmd [:dir dir
                             :env (assoc (into {} (System/getenv))
                                         ;; https://github.com/technomancy/leiningen/issues/2611
                                         "LEIN_JVM_OPTS" ""
@@ -29,12 +29,16 @@
                     (into (prep-cmds [":test-matcher-directories" "[\"test-pass\" \"test-fail\"]"]))
                     (into (prep-cmds [":selectors" "[cli-fail.test-fail cli-fail.test-pass]"]))
                     ;; selectors from test-selectors.clj
+                    ;; FIXME Leiningen test selectors don't work this way
+                    #_
                     (into (prep-cmds [":selectors" "[:just-passing :just-failing]"]))
+                    ;; FIXME Leiningen test selectors don't work this way
+                    #_
                     (into (prep-cmds [":selectors" "[:just-failing :only cli-fail.test-pass/i-pass]"]))
                     ;; combine :only and :selectors
                     (into (prep-cmds [":only" "cli-fail.test-fail/i-fail" ":selectors" "[cli-fail.test-pass]"]))
                     (into (prep-cmds [":only" "cli-fail.test-fail/i-fail" ":selectors" "[:just-passing]"])))]
-      (testing ( (pr-str cmd))
+      (testing (pr-str cmd)
         (let [{:keys [exit out] :as res} (sh cmd)]
           (is (= 1 exit) (pr-str res))
           (is (str/includes? out "Ran 2 tests") (pr-str res))
