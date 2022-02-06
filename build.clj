@@ -5,7 +5,7 @@
             [clojure.string :as str]))
 
 (def lib 'metosin/bat-test)
-(def +version+ (format "0.4.6.%s" (b/git-count-revs nil)))
+(def +version+ (format "%s.%s" (slurp "version") (b/git-count-revs nil)))
 (def class-dir "target/classes")
 (def basis (b/create-basis {:project "deps.edn"}))
 (def jar-file (format "target/%s-%s.jar" (name lib) +version+))
@@ -42,7 +42,9 @@
 (defn version [_] (print +version+))
 
 ;; clojure -T:build install
-(defn install [_]
+(defn install
+  "Prints the version that was installed."
+  [_]
   (clean {})
   (jar {})
   (b/install {:basis basis

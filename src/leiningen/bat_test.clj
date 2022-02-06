@@ -37,7 +37,7 @@
     on-end (conj (quoted-namespace :on-end on-end))))
 
 (defn- run-tests [project opts watch?]
-  (let [watch-directories (or (:watch-directories opts)
+  (let [watch-directories (or (:watch-directories opts) ;;TODO absolutize paths?
                               (vec (concat (:test-paths project)
                                            (:source-paths project)
                                            (:resource-paths project))))
@@ -45,16 +45,16 @@
     (eval/eval-in-project
       project
       (if watch?
-        `(let [opts# ~opts]
+        `(let [opts# '~opts]
            (System/setProperty "java.awt.headless" "true")
            (metosin.bat-test.impl/run opts#)
            (metosin.bat-test.impl/enter-key-listener opts#)
-           (hawk.core/watch! [{:paths ~watch-directories
+           (hawk.core/watch! [{:paths '~watch-directories
                                :filter hawk.core/file?
                                :context (constantly 0)
-                               :handler (fn [~'ctx ~'e]
-                                          (if (and (re-matches #"^[^.].*[.]cljc?$" (.getName (:file ~'e)))
-                                                   (< (+ ~'ctx 1000) (System/currentTimeMillis)))
+                               :handler (fn [ctx# e#]
+                                          (if (and (re-matches #"^[^.].*[.]cljc?$" (.getName (:file e#)))
+                                                   (< (+ ctx# 1000) (System/currentTimeMillis)))
                                             (do
                                               (try
                                                 (println)
@@ -62,8 +62,9 @@
                                                 (catch Exception e#
                                                   (println e#)))
                                               (System/currentTimeMillis))
-                                            ~'ctx))}]))
-        `(let [summary# (metosin.bat-test.impl/run ~opts)
+                                            ctx#))}]))
+        `(let [opts# '~opts
+               summary# (metosin.bat-test.impl/run opts#)
                exit-code# (min 1 (+ (:fail summary# 0) (:error summary# 0)))]
            (if ~(= :leiningen (:eval-in project))
              exit-code#
@@ -121,19 +122,18 @@ Arguments:
 - once, auto, cloverage, help
 - test selectors
 
-If first argument is a keyword or with no arguments, provides the same interface as metosin.bat-test.cli/exec."
+If first argument is a colon, provides the same interface as metosin.bat-test.cli/exec:
+eg., lein bat-test : :parallel? true"
   {:help-arglists '([& tests])
    :subtasks      [#'once #'auto]}
   [project & args]
-  (let [[subtask args] (or (when (empty? args)
-                             ['cli args])
-                           (when-some [op (some-> (first args) read-string)]
-                             (if (keyword? op)
-                               ['cli args]
-                               [('#{auto once help cloverage} op)
-                                (next args)]))
-                           ['once (next args)])
-        cli? (= 'cli subtask)
+  (let [[subtask args] (or (when-some [op (first args)]
+                             (if (= ":" op)
+                               ["cli" (next args)]
+                               (when (#{"auto" "once" "help" "cloverage"} op)
+                                 [op (next args)])))
+                           ["once" args])
+        cli? (= "cli" subtask)
         args (if cli?
                (do (assert (even? (count args)) (str "Uneven arguments to bat-test command line interface: "
                                                      (pr-str args)))
@@ -141,16 +141,17 @@ If first argument is a keyword or with no arguments, provides the same interface
                          (map (fn [[k v]] [(read-string k) (read-string v)]))
                          (partition 2 args)))
                args)
+        _ (prn cli? args)
         ;; read-args tries to find namespaces in test-paths if args doesn't contain namespaces
         [namespaces selectors] (test/read-args
-                                 (if (= 'cli subtask)
+                                 (if cli?
                                    (mapv pr-str (cli/opts->selectors args))
                                    args)
                                  (assoc project :test-paths nil))
         project (project/merge-profiles project [:leiningen/test :test profile])
         config (-> {:enter-key-listener true}
                    (into (:bat-test project))
-                   (assoc :cloverage (= 'cloverage subtask))
+                   (assoc :cloverage (= "cloverage" subtask))
                    (into (when cli? args))
                    (assoc :selectors (vec selectors)
                           :namespaces (mapv (fn [n] `'~n) namespaces)))
@@ -162,10 +163,10 @@ If first argument is a keyword or with no arguments, provides the same interface
                      (main/abort "Tests failed.")))
         do-watch #(run-tests project config true)]
     (case subtask
-      (once cloverage) (do-once)
-      auto (do-watch)
-      help (println (help/help-for "bat-test"))
-      cli ((if (:watch config)
-             do-watch
-             do-once))
+      ("once" cloverage) (do-once)
+      "auto" (do-watch)
+      "help" (println (help/help-for "bat-test"))
+      "cli" ((if (:watch config)
+               do-watch
+               do-once))
       (main/warn "Unknown task."))))

@@ -12,3 +12,4 @@ pom.xml.asc
 .nrepl-history
 .cpcache
 test-projects/*/target
+.lein-failures

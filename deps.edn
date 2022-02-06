@@ -1,16 +1,17 @@
-{:paths ["src"
-         ;; for :deps/prep-lib
-         "target/classes"]
- :deps {org.clojure/clojure {:mvn/version "1.10.3"}
-        eftest/eftest {:mvn/version "0.5.9"}
+{:paths ["src"]
+ :deps {eftest/eftest {:mvn/version "0.5.9"}
         org.clojure/tools.namespace {:mvn/version "1.2.0"}
         cloverage/cloverage {:mvn/version "1.1.1"}
         hawk/hawk {:mvn/version "0.2.11"}}
+ ;; Note: prep is commented out because it only generates metosin.bat-test.version,
+ ;; which is only used in leiningen.bat-test--ie., only ever from a jar. This will
+ ;; thus never be used via a deps.edn source dependency. If enabling this prep step,
+ ;; add "target/classes" to the top-level :paths entry.
  ;; clj -X:deps prep
  ;; https://clojure.org/guides/deps_and_cli#prep_libs
- :deps/prep-lib {:alias :build
-                 :fn compile
-                 :ensure "target/classes"}
+ ;:deps/prep-lib {:alias :build
+ ;                :fn compile
+ ;                :ensure "target/classes"}
  :aliases {;; clojure -X:test
            :test {:extra-paths ["test"]
                   :extra-deps {io.github.cognitect-labs/test-runner 
@@ -18,5 +19,7 @@
                   :exec-fn cognitect.test-runner.api/test}
            ;; clj -T:build clean
            ;; clj -T:build jar
+           ;; clj -T:build install
+           ;; clj -T:build version
            :build {:deps {io.github.clojure/tools.build {:git/tag "v0.7.5" :git/sha "34727f7"}}
                    :ns-default build}}}

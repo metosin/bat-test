@@ -6,4 +6,7 @@
   :test-paths ["test-pass"
                "test-fail"]
   :dependencies [[org.clojure/clojure "1.10.3"]]
-  :plugins [[metosin/bat-test ~bat-test-version]])
+  :test-selectors ~(-> "test-selectors.clj" slurp read-string)
+  :bat-test {:test-matcher #".*"}
+  :plugins [[metosin/bat-test ~bat-test-version]
+            [lein-pprint "1.3.2"]])

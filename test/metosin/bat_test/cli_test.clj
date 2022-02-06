@@ -5,29 +5,36 @@
             [clojure.java.shell :as sh]))
 
 (defn prep-cmds
-  ([cmd] (test-cmds #{:cli :lein} cmd))
+  ([cmd] (prep-cmds #{:cli :lein} cmd))
   ([impls cmd]
    {:post [(seq %)]}
    (cond-> []
      (:cli impls) (conj (into ["clojure" "-X:test"] cmd))
-     (:lein impls) (conj (into [;; FIXME might need to use :env
-                                "LEIN_USE_BOOTCLASSPATH=no" ;; jvm 17 support for fipp https://github.com/brandonbloom/fipp/issues/60
-                                "lein" "bat-test"] cmd)))))
+     (:lein impls) (conj (into ["lein" "bat-test" ":"] cmd)))))
+
+(defn sh-in-dir [dir cmd]
+  (apply sh/sh (concat cmd [:dir 
+                            :env (assoc (into {} (System/getenv))
+                                        ;; https://github.com/technomancy/leiningen/issues/2611
+                                        "LEIN_JVM_OPTS" ""
+                                        ;; jvm 17 support for fipp https://github.com/brandonbloom/fipp/issues/60
+                                        "LEIN_USE_BOOTCLASSPATH" "no")])))
 
 (deftest cli-fail-test
-  (let [sh #(apply sh/sh (concat % [:dir "test-projects/cli-fail"]))]
+  (let [sh (partial sh-in-dir "test-projects/cli-fail")]
     ;; different ways of running all tests
-    (doseq [cmd [["clojure" "-X:test"]
-                 ["clojure" "-X:test" ":system-exit" "false"]
-                 ["clojure" "-X:test" ":test-matcher-directories" "[\"test-pass\" \"test-fail\"]"]
-                 ["clojure" "-X:test" ":selectors" "[cli-fail.test-fail cli-fail.test-pass]"]
-                 ;; selectors from test-selectors.clj
-                 ["clojure" "-X:test" ":selectors" "[:just-passing :just-failing]"]
-                 ["clojure" "-X:test" ":selectors" "[:just-failing :only cli-fail.test-pass/i-pass]"]
-                 ;; combine :only and :selectors
-                 ["clojure" "-X:test" ":only" "cli-fail.test-fail/i-fail" ":selectors" "[cli-fail.test-pass]"]
-                 ["clojure" "-X:test" ":only" "cli-fail.test-fail/i-fail" ":selectors" "[:just-passing]"]]]
-      (testing (pr-str cmd)
+    (doseq [cmd (-> []
+                    (into (prep-cmds []))
+                    (into (prep-cmds #{:cli} [":system-exit" "false"]))
+                    (into (prep-cmds [":test-matcher-directories" "[\"test-pass\" \"test-fail\"]"]))
+                    (into (prep-cmds [":selectors" "[cli-fail.test-fail cli-fail.test-pass]"]))
+                    ;; selectors from test-selectors.clj
+                    (into (prep-cmds [":selectors" "[:just-passing :just-failing]"]))
+                    (into (prep-cmds [":selectors" "[:just-failing :only cli-fail.test-pass/i-pass]"]))
+                    ;; combine :only and :selectors
+                    (into (prep-cmds [":only" "cli-fail.test-fail/i-fail" ":selectors" "[cli-fail.test-pass]"]))
+                    (into (prep-cmds [":only" "cli-fail.test-fail/i-fail" ":selectors" "[:just-passing]"])))]
+      (testing ( (pr-str cmd))
         (let [{:keys [exit out] :as res} (sh cmd)]
           (is (= 1 exit) (pr-str res))
           (is (str/includes? out "Ran 2 tests") (pr-str res))
