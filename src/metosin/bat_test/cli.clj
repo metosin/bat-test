@@ -124,11 +124,11 @@
   
   Returns a test summary {:fail <num-tests-failed> :error <num-tests-errored>}"
   [opts]
-  (let [{:keys [test-matcher-directories] :as opts} opts
-        opts (dissoc opts :only)
-        [namespaces selectors] (-lein-test-read-args opts
+  (let [[namespaces selectors] (-lein-test-read-args opts
                                                      (opts->selectors opts)
-                                                     (:paths opts))]
+                                                     (:paths opts))
+        opts (dissoc opts :only)
+        {:keys [test-matcher-directories]} opts]
     (impl/run
       (-> opts
           ;; convert from `lein test`-style :selectors to internal bat-test representation.
