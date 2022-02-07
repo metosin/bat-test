@@ -4,5 +4,5 @@
                                                  :deps/manifest :deps}}
                   :exec-fn metosin.bat-test.cli/exec
                   :exec-args {:test-selectors-form-file "test-selectors.clj"
-                              :test-matcher-directories ["test-fail" "test-pass"]}
+                              :test-dirs ["test-fail" "test-pass"]}
                   :main-opts ["-m" "metosin.bat-test.cli" "{:exec-args-file \"bat-test.edn\"}"]}}}

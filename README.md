@@ -87,7 +87,7 @@ clojure -X:test :watch true
 clojure -X:test :parallel true
 
 # just test files under particular directories (handy for monorepos)
-clojure -X:test :test-matcher-directories '["module1" "module3"]'
+clojure -X:test :test-dirs '["module1" "module3"]'
 
 # use Leiningen-style test selectors (see next section for custom selectors)
 clojure -X:test :selectors '[:all]' # <- lein test :all

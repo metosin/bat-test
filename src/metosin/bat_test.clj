@@ -31,7 +31,7 @@
 
   Default reporter is :progress."
   [m test-matcher VAL regex "Regex used to select test namespaces (default #\".*test\")"
-   d test-matcher-directories VAL edn "Vector of paths restricting the tests that will be matched. Relative to project root (default `nil`, no restrictions)"
+   d test-dirs VAL edn "Path or vector of paths restricting the tests that will be matched. Relative to project root (default `nil`, no restrictions)"
    p parallel         bool  "Run tests parallel (default off)"
    r report       VAL edn   "Reporting function"
    f filter       VAL sym   "Function to filter the test vars"
@@ -49,7 +49,7 @@
                  (assoc :verbosity (deref util/*verbosity*)
                         :watch-directories (:directories pod/env))
                  (cond-> 
-                   (some? test-matcher-directories) (assoc :test-matcher-directories test-matcher-directories)))]
+                   (some? test-dirs) (assoc :test-dirs test-dirs)))]
     (fn [handler]
       (System/setProperty "java.awt.headless" "true")
       (pod/with-call-in @p (metosin.bat-test.impl/enter-key-listener ~opts))

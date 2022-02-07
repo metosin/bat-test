@@ -134,7 +134,7 @@
     [nses selectors-or-default]))
 
 (defn- run-tests1
-  "Run tests in :test-matcher-directories. Takes the same options as `run-tests`.
+  "Run tests in :test-dirs. Takes the same options as `run-tests`.
   
   Returns a test summary {:fail <num-tests-failed> :error <num-tests-errored>}"
   [opts]
@@ -143,7 +143,7 @@
                                                      false
                                                      (-user-test-selectors-form opts))
         opts (dissoc opts :only)
-        {:keys [test-matcher-directories]} opts]
+        {:keys [test-dirs]} opts]
     (impl/run
       (-> opts
           ;; convert from `lein test`-style :selectors to internal bat-test representation.
@@ -172,7 +172,7 @@
 
   Available options:
   :watch             If true, continuously watch and reload (loaded) namespaces in
-                     :watch-directories, and run tests in :test-matcher-directories when needed.
+                     :watch-directories, and run tests in :test-dirs when needed.
                      Default: false
   :selectors         A vector of test selectors.
   :only              A qualified deftest var to test only. `:only <provided arg>` will be added to existing :selectors.
@@ -189,7 +189,7 @@
   :watch-directories Vector of paths to refresh if loaded. Relative to project root.
                      Only meaningful when :watch is true.
                      Defaults to all non-jar classpath entries.
-  :test-matcher-directories  Vector of paths restricting the tests that will be matched. Relative to project root.
+  :test-dirs  Vector of paths restricting the tests that will be matched. Relative to project root.
                              Default: nil (no restrictions).
   :headless           If true, set -Djava.awt.headless=true. Default: false. Only meaningful when :watch is true.
   :enter-key-listener If true, refresh tracker on enter key. Default: false. Only meaningful when :watch is true."
@@ -274,7 +274,7 @@
 
   Setup:
   eg., deps.edn: {:aliases {:test {:exec-fn metosin.bat-test.cli/exec}}}
-       $ clojure -X:test :test-matcher-directories '[\"submodule\"]'
+       $ clojure -X:test :test-dirs '[\"submodule\"]'
   
   Supports the same options of `metosin.bat-test.cli/test`, except
   for the following differences:
@@ -333,5 +333,4 @@
                            default-opts-map
                            args)
         opts (add-lein-style-selectors-to-opts selectors opts)]
-    (prn opts)
     (exec (into default-opts-map opts))))

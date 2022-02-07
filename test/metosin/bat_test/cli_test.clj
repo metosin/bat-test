@@ -27,7 +27,7 @@
     (doseq [cmd (-> []
                     (into (prep-cmds []))
                     (into (prep-cmds #{:cli} [":system-exit" "false"]))
-                    (into (prep-cmds [":test-matcher-directories" "[\"test-pass\" \"test-fail\"]"]))
+                    (into (prep-cmds [":test-dirs" "[\"test-pass\" \"test-fail\"]"]))
                     (into (prep-cmds [":selectors" "[cli-fail.test-fail cli-fail.test-pass]"]))
                     ;; selectors from test-selectors.clj
                     (into (prep-cmds [":selectors" "[:just-passing :just-failing]"]))
@@ -44,8 +44,8 @@
           (is (str/includes? out "2 assertions, 1 failure, 0 errors") (pr-str res)))))
     ;; different ways of just running `cli-fail.test-fail/i-fail`
     (doseq [cmd (-> []
-                    (into (prep-cmds [":test-matcher-directories" "[\"test-fail\"]"]))
-                    (into (prep-cmds [":test-matcher-directories" "[\"test-fail\"]" ":system-exit" "false"]))
+                    (into (prep-cmds [":test-dirs" "\"test-fail\""]))
+                    (into (prep-cmds [":test-dirs" "[\"test-fail\"]"]))
                     (into (prep-cmds [":selectors" "[cli-fail.test-fail]"]))
                     (into (prep-cmds [":selectors" "[:just-failing]"]))
                     (into (prep-cmds [":selectors" "[:only cli-fail.test-fail/i-fail]"]))
@@ -57,8 +57,8 @@
           (is (str/includes? out "1 assertion, 1 failure, 0 errors") (pr-str res)))))
     ;; different ways of just running `cli-fail.test-pass/i-pass`
     (doseq [cmd (-> []
-                    (into (prep-cmds [":test-matcher-directories" "[\"test-pass\"]"]))
-                    (into (prep-cmds [":test-matcher-directories" "[\"test-pass\"]" ":system-exit" "false"]))
+                    (into (prep-cmds [":test-dirs" "\"test-pass\""]))
+                    (into (prep-cmds [":test-dirs" "[\"test-pass\"]"]))
                     (into (prep-cmds [":selectors" "[cli-fail.test-pass]"]))
                     (into (prep-cmds [":selectors" "[:just-passing]"]))
                     (into (prep-cmds [":selectors" "[:only cli-fail.test-pass/i-pass]"]))
@@ -90,13 +90,13 @@
           (is (str/includes? out "Testing cli-fail.test-pass") (pr-str res))
           (is (str/includes? out "Ran 2 tests containing 2 assertions") (pr-str res))
           (is (str/includes? out "1 failures, 0 errors") (pr-str res)))))
-    ;; :test-matcher-directories influences which namespaces are initially loaded
+    ;; :test-dirs influences which namespaces are initially loaded
     (doseq [{:keys [cmds pass-loaded?] :as test-case} [{:desc "Load all namespaces"
                                                         :pass-loaded? true
                                                         :cmds (prep-cmds [":report" "[clojure.test/report]"])}
                                                        {:desc "Don't load cli-fail.test-pass"
                                                         :pass-loaded? false
-                                                        :cmds (prep-cmds [":report" "[clojure.test/report]" ":test-matcher-directories" "[\"test-fail\"]"])}]
+                                                        :cmds (prep-cmds [":report" "[clojure.test/report]" ":test-dirs" "[\"test-fail\"]"])}]
             _ (assert (seq cmds))
             cmd cmds]
       (testing (pr-str test-case)

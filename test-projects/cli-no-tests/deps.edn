@@ -1,6 +1,6 @@
-;; note: test dir doesn't exist. this is to test :test-matcher-directories.
+;; note: test dir doesn't exist. this is to test :test-dirs.
 {:aliases {:test {:extra-paths ["test"]
                   :extra-deps {metosin/bat-test {:local/root "../.."
                                                  :deps/manifest :deps}}
                   :exec-fn metosin.bat-test.cli/exec
-                  :exec-args {:test-matcher-directories ["test"]}}}}
+                  :exec-args {:test-dirs ["test"]}}}}

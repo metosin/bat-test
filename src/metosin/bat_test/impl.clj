@@ -127,11 +127,11 @@
     (run-tests)))
 
 (defn test-matcher-only-in-directories [test-matcher
-                                        test-matcher-directories]
+                                        test-dirs]
   {:pre [(or (instance? java.util.regex.Pattern test-matcher)
              (string? test-matcher))
-         (or (nil? test-matcher-directories)
-             (coll? test-matcher-directories))]
+         (or (nil? test-dirs)
+             (coll? test-dirs))]
    :post [(instance? java.util.regex.Pattern %)]}
   (let [re-and (fn [rs]
                  {:pre [(every? #(instance? java.util.regex.Pattern %) rs)]
@@ -150,15 +150,15 @@
       (remove nil?
               [(cond-> test-matcher
                  (string? test-matcher) re-pattern)
-               ;; if test-matcher-directories is nil, don't change test-matcher
+               ;; if test-dirs is nil, don't change test-matcher
                ;; otherwise, it's a seqable of zero or more directories that a test must
                ;; be in to run.
-               (when (some? test-matcher-directories)
+               (when (some? test-dirs)
                  ;; both restricts the tests being run and stops
                  ;; bat-test.impl/load-only-loaded-and-test-ns from loading
                  ;; all test namespaces if only a subset are specified by
-                 ;; `test-matcher-directories`.
-                 (if-some [matching-ns-res (->> test-matcher-directories
+                 ;; `test-dirs`.
+                 (if-some [matching-ns-res (->> test-dirs
                                                 (map io/file)
                                                 find/find-namespaces
                                                 (map name)
@@ -175,11 +175,11 @@
                    #"(?!.*)"))]))))
 
 (defn reload-and-test
-  [tracker {:keys [on-start test-matcher parallel? report selectors namespaces test-matcher-directories]
+  [tracker {:keys [on-start test-matcher parallel? report selectors namespaces test-dirs]
             :or {report :progress
                  test-matcher #".*test"}
             :as opts}]
-  (let [test-matcher (test-matcher-only-in-directories test-matcher test-matcher-directories)
+  (let [test-matcher (test-matcher-only-in-directories test-matcher test-dirs)
         parallel? (true? parallel?)
         changed-ns (::track/load @tracker)
         test-namespaces (->> changed-ns
@@ -213,7 +213,7 @@
                 (selectors-match selectors)
                 (filter (resolve-hook (:filter opts))))
            (-> opts
-               (dissoc :parallel? :on-start :on-end :filter :test-matcher :selectors :test-matcher-directories)
+               (dissoc :parallel? :on-start :on-end :filter :test-matcher :selectors :test-dirs)
                (assoc :multithread? parallel?
                       :report (resolve-reporter report)))))
        opts
