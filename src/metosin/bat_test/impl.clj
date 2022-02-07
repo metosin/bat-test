@@ -100,23 +100,20 @@
     :else (constantly true)))
 
 (defn namespaces-match [selected-namespaces nss]
-  (if (seq selected-namespaces)
-    (filter (set selected-namespaces) nss)
-    nss))
+  (cond->> nss
+    (seq selected-namespaces) (filter (set selected-namespaces))))
 
 (defn selectors-match [selectors vars]
-  (if (seq selectors)
+  (cond->> vars
+    (seq selectors)
     (filter (fn [var]
               (some (fn [[selector args]]
-                      (apply (eval (if (vector? selector)
-                                     (second selector)
-                                     selector))
+                      (apply (eval (cond-> selector
+                                     (vector? selector) second))
                              (merge (-> var meta :ns meta)
                                     (assoc (meta var) :leiningen.test/var var))
                              args))
-                    selectors))
-            vars)
-    vars))
+                    selectors)))))
 
 (defn maybe-run-cloverage [run-tests opts changed-ns test-namespaces]
   (if (:cloverage opts)
@@ -242,16 +239,14 @@
             (util/warn "Exception: %s\n" (.getMessage e))))))) )
 
 (defn run [{:keys [on-end watch-directories notify-command] :as opts}]
+  (prn `run (:selectors opts))
   (try
     (reset! running true)
     (swap! tracker (fn [tracker]
                      (util/dbug "Scan directories: %s\n" (pr-str watch-directories))
                      (dir/scan-dirs (or tracker (track/tracker)) watch-directories)))
-
     (let [summary (reload-and-test tracker opts)]
-
       (run-notify-command notify-command summary)
-
       summary)
     (finally
       ((resolve-hook on-end))

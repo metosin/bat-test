@@ -45,7 +45,7 @@
     (eval/eval-in-project
       project
       (if watch?
-        `(let [opts# '~opts]
+        `(let [opts# ~opts]
            (System/setProperty "java.awt.headless" "true")
            (metosin.bat-test.impl/run opts#)
            (metosin.bat-test.impl/enter-key-listener opts#)
@@ -63,7 +63,7 @@
                                                   (println e#)))
                                               (System/currentTimeMillis))
                                             ctx#))}]))
-        `(let [opts# '~opts
+        `(let [opts# ~opts
                summary# (metosin.bat-test.impl/run opts#)
                exit-code# (min 1 (+ (:fail summary# 0) (:error summary# 0)))]
            (if ~(= :leiningen (:eval-in project))
@@ -142,11 +142,19 @@ eg., lein bat-test : :parallel? true"
                          (partition 2 args)))
                args)
         ;; read-args tries to find namespaces in test-paths if args doesn't contain namespaces
-        [namespaces selectors] (test/read-args
-                                 (if cli?
-                                   (mapv pr-str (cli/opts->selectors args))
-                                   args)
-                                 (assoc project :test-paths nil))
+        [namespaces selectors] (if cli?
+                                 (cli/-lein-test-read-args
+                                   args
+                                   (cli/opts->selectors args)
+                                   nil
+                                   true
+                                   (:test-selectors project))
+                                 (test/read-args
+                                   args
+                                   (assoc project :test-paths nil)))
+        args (cond-> args
+               ;; :only is now part of `selectors`
+               cli? (dissoc :only))
         project (project/merge-profiles project [:leiningen/test :test profile])
         config (-> {:enter-key-listener true}
                    (into (:bat-test project))

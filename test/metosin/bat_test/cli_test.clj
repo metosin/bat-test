@@ -27,22 +27,12 @@
                     (into (prep-cmds []))
                     (into (prep-cmds #{:cli} [":system-exit" "false"]))
                     (into (prep-cmds [":test-matcher-directories" "[\"test-pass\" \"test-fail\"]"]))
-                    ;; FIXME Leiningen test selectors don't work this way
-                    #_
                     (into (prep-cmds [":selectors" "[cli-fail.test-fail cli-fail.test-pass]"]))
                     ;; selectors from test-selectors.clj
-                    ;; FIXME Leiningen test selectors don't work this way
-                    #_
                     (into (prep-cmds [":selectors" "[:just-passing :just-failing]"]))
-                    ;; FIXME Leiningen test selectors don't work this way
-                    #_
                     (into (prep-cmds [":selectors" "[:just-failing :only cli-fail.test-pass/i-pass]"]))
                     ;; combine :only and :selectors
-                    ;; FIXME Leiningen test selectors don't work this way
-                    #_
                     (into (prep-cmds [":only" "cli-fail.test-fail/i-fail" ":selectors" "[cli-fail.test-pass]"]))
-                    ;; FIXME Leiningen test selectors don't work this way
-                    #_
                     (into (prep-cmds [":only" "cli-fail.test-fail/i-fail" ":selectors" "[:just-passing]"])))]
       (testing (pr-str cmd)
         (let [{:keys [exit out] :as res} (sh cmd)]

@@ -36,14 +36,17 @@
 
 ;; https://github.com/technomancy/leiningen/blob/4d8ee78018158c05d69b250e7851f9d7c3a44fac/src/leiningen/test.clj#L144-L154
 (defn- -split-selectors
-  "Unlike original function, returns a value--not code."
-  [args]
+  "Selectors are (namespace*)(selector-kw selector-non-kw-arg*)*
+
+  Unlike original function, returns a value--not code."
+  [args quote-args?]
   (let [[nses selectors] (split-with (complement keyword?) args)]
     [nses
      (loop [acc {} [selector & selectors] selectors]
        (if (seq selectors)
          (let [[args next] (split-with (complement keyword?) selectors)]
-           (recur (assoc acc selector args)
+           (recur (assoc acc selector (cond->> args
+                                        quote-args? (list 'quote)))
                   next))
          (if selector
            (assoc acc selector ())
@@ -56,7 +59,6 @@
         :when selector-form]
     [selector-form v]))
 
-;; static configuration only
 (defn ^:private -default-opts [args]
   (let [opts (if (map? args)
                args
@@ -87,21 +89,20 @@
     (second (read-file-ns-decl possible-file))
     possible-file))
 
-;; https://github.com/technomancy/leiningen/blob/4d8ee78018158c05d69b250e7851f9d7c3a44fac/src/leiningen/test.clj#L200
-(defn ^:private -lein-test-read-args
+;; https://github.com/technomancy/leiningen/blob/4d8ee78018158c05d69b250e7851f9d7c3a44fac/src/leiningen/test.clj#L182
+(defn ^:internal -lein-test-read-args
   "Unlike original function, reads list of values, not strings,
   and returns a value, not code.
   
   opts are from `run-tests`."
-  [opts args paths]
+  [opts args test-paths quote-args? user-selectors]
   (let [args (->> args (map -convert-to-ns))
-        [nses given-selectors] (-split-selectors args)
+        [nses given-selectors] (-split-selectors args quote-args?)
         nses (or (seq nses)
                  (sort (find-namespaces
-                         (map io/file (distinct paths)))))
+                         (map io/file (distinct test-paths)))))
         default-selectors {:all `(constantly true)
                            :only -only-form}
-        user-selectors (-user-test-selectors-form opts)
         selectors (-partial-selectors (into default-selectors
                                             user-selectors)
                                       given-selectors)
@@ -111,13 +112,14 @@
                                selectors)]
     (when (and (empty? selectors)
                (seq given-selectors))
-      (throw (ex-info "Could not find test selectors.")))
+      (throw (ex-info "Could not find test selectors." {})))
     [nses selectors-or-default]))
 
 (defn opts->selectors [{:keys [only selectors] :as _opts}]
   (-> []
-      (cond-> only (conj :only only))
-      (into selectors)))
+      ;; selectors go first in case they are prefixed by namespaces
+      (into selectors)
+      (cond-> only (conj :only only))))
 
 (defn- run-tests1
   "Run tests in :test-matcher-directories. Takes the same options as `run-tests`.
@@ -126,7 +128,9 @@
   [opts]
   (let [[namespaces selectors] (-lein-test-read-args opts
                                                      (opts->selectors opts)
-                                                     (:paths opts))
+                                                     (:paths opts)
+                                                     false
+                                                     (-user-test-selectors-form opts))
         opts (dissoc opts :only)
         {:keys [test-matcher-directories]} opts]
     (impl/run
