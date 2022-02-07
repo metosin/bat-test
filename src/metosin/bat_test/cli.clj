@@ -171,7 +171,7 @@
                      Default: false
   :selectors         A vector of test selectors.
   :only              A qualified deftest var to test only. `:only <provided arg>` will be added to existing :selectors.
-  :test-matcher      The regex used to select test namespaces
+  :test-matcher      The regex used to select test namespaces. A string can also be provided which will be coerce via `re-pattern`.
   :parallel?         Run tests parallel (default off)
   :capture-output?   Display logs even if tests pass (option for Eftest test runner)
   :report            Reporting function, eg., [:pretty {:type :junit :output-to \"target/junit.xml\"}]
@@ -238,10 +238,7 @@
   [args]
   (-> args
       (set/rename-keys {:capture-output :capture-output?
-                        :parallel :parallel?})
-      (cond->
-        (string? (:test-matcher args))
-        (update :test-matcher re-pattern))))
+                        :parallel :parallel?})))
 
 (defn test
   "Run tests with some useful defaults for REPL usage.
@@ -252,7 +249,6 @@
   for the following differences:
   - :parallel        Alias for `:parallel?`
   - :capture-output  Alias for `:capture-output?`
-  - :test-matcher    Can be a string.
   - :system-exit  If true and :watch is not true, exit via System/exit (code 0 if tests pass, 1 on failure).
                   If not true and :watch is not true, throw an exception if tests fail.
                   Default: nil"

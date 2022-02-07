@@ -128,7 +128,8 @@
 
 (defn test-matcher-only-in-directories [test-matcher
                                         test-matcher-directories]
-  {:pre [(instance? java.util.regex.Pattern test-matcher)
+  {:pre [(or (instance? java.util.regex.Pattern test-matcher)
+             (string? test-matcher))
          (or (nil? test-matcher-directories)
              (coll? test-matcher-directories))]
    :post [(instance? java.util.regex.Pattern %)]}
@@ -147,7 +148,8 @@
                                     "$"))))]
     (re-and
       (remove nil?
-              [test-matcher
+              [(cond-> test-matcher
+                 (string? test-matcher) re-pattern)
                ;; if test-matcher-directories is nil, don't change test-matcher
                ;; otherwise, it's a seqable of zero or more directories that a test must
                ;; be in to run.
@@ -177,9 +179,7 @@
             :or {report :progress
                  test-matcher #".*test"}
             :as opts}]
-  (let [test-matcher (cond-> test-matcher
-                       (string? test-matcher) re-pattern)
-        test-matcher (test-matcher-only-in-directories test-matcher test-matcher-directories)
+  (let [test-matcher (test-matcher-only-in-directories test-matcher test-matcher-directories)
         parallel? (true? parallel?)
         changed-ns (::track/load @tracker)
         test-namespaces (->> changed-ns

@@ -108,8 +108,8 @@
 (deftest cli-no-tests-test
   (let [sh (partial sh-in-dir "test-projects/cli-no-tests")]
     ;; check that there are no tests
-    (let [cmd (-> []
-                  (into (prep-cmds [])))]
+    (doseq [cmd (-> []
+                    (into (prep-cmds [])))]
       (testing (pr-str cmd)
         (let [{:keys [exit out] :as res} (sh cmd)]
           (is (= 0 exit) (pr-str res))
