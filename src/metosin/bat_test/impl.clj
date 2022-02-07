@@ -177,7 +177,9 @@
             :or {report :progress
                  test-matcher #".*test"}
             :as opts}]
-  (let [test-matcher (test-matcher-only-in-directories test-matcher test-matcher-directories)
+  (let [test-matcher (cond-> test-matcher
+                       (string? test-matcher) re-pattern)
+        test-matcher (test-matcher-only-in-directories test-matcher test-matcher-directories)
         parallel? (true? parallel?)
         changed-ns (::track/load @tracker)
         test-namespaces (->> changed-ns
@@ -239,7 +241,6 @@
             (util/warn "Exception: %s\n" (.getMessage e))))))) )
 
 (defn run [{:keys [on-end watch-directories notify-command] :as opts}]
-  (prn `run (:selectors opts))
   (try
     (reset! running true)
     (swap! tracker (fn [tracker]

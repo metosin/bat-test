@@ -42,25 +42,27 @@
           (is (str/includes? out "Ran 2 tests") (pr-str res))
           (is (str/includes? out "2 assertions, 1 failure, 0 errors") (pr-str res)))))
     ;; different ways of just running `cli-fail.test-fail/i-fail`
-    (doseq [cmd [["clojure" "-X:test" ":test-matcher-directories" "[\"test-fail\"]"]
-                 ["clojure" "-X:test" ":test-matcher-directories" "[\"test-fail\"]" ":system-exit" "false"]
-                 ["clojure" "-X:test" ":selectors" "[cli-fail.test-fail]"]
-                 ["clojure" "-X:test" ":selectors" "[:just-failing]"]
-                 ["clojure" "-X:test" ":selectors" "[:only cli-fail.test-fail/i-fail]"]
-                 ["clojure" "-X:test" ":test-matcher" "\"cli-fail.test-fail\""]]]
+    (doseq [cmd (-> []
+                    (into (prep-cmds [":test-matcher-directories" "[\"test-fail\"]"]))
+                    (into (prep-cmds [":test-matcher-directories" "[\"test-fail\"]" ":system-exit" "false"]))
+                    (into (prep-cmds [":selectors" "[cli-fail.test-fail]"]))
+                    (into (prep-cmds [":selectors" "[:just-failing]"]))
+                    (into (prep-cmds [":selectors" "[:only cli-fail.test-fail/i-fail]"]))
+                    (into (prep-cmds [":test-matcher" "\"cli-fail.test-fail\""])))]
       (testing (pr-str cmd)
         (let [{:keys [exit out] :as res} (sh cmd)]
           (is (= 1 exit) (pr-str res))
           (is (str/includes? out "Ran 1 tests") (pr-str res))
           (is (str/includes? out "1 assertion, 1 failure, 0 errors") (pr-str res)))))
     ;; different ways of just running `cli-fail.test-pass/i-pass`
-    (doseq [cmd [["clojure" "-X:test" ":test-matcher-directories" "[\"test-pass\"]"]
-                 ["clojure" "-X:test" ":test-matcher-directories" "[\"test-pass\"]" ":system-exit" "false"]
-                 ["clojure" "-X:test" ":selectors" "[cli-fail.test-pass]"]
-                 ["clojure" "-X:test" ":selectors" "[:just-passing]"]
-                 ["clojure" "-X:test" ":selectors" "[:only cli-fail.test-pass/i-pass]"]
-                 ["clojure" "-X:test" ":test-matcher" "\"cli-fail.test-pass\""]
-                 ["clojure" "-X:test" ":test-matcher" "\".*-pass\""]]]
+    (doseq [cmd (-> []
+                    (into (prep-cmds [":test-matcher-directories" "[\"test-pass\"]"]))
+                    (into (prep-cmds [":test-matcher-directories" "[\"test-pass\"]" ":system-exit" "false"]))
+                    (into (prep-cmds [":selectors" "[cli-fail.test-pass]"]))
+                    (into (prep-cmds [":selectors" "[:just-passing]"]))
+                    (into (prep-cmds [":selectors" "[:only cli-fail.test-pass/i-pass]"]))
+                    (into (prep-cmds [":test-matcher" "\"cli-fail.test-pass\""]))
+                    (into (prep-cmds [":test-matcher" "\".*-pass\""])))]
       (testing (pr-str cmd)
         (let [{:keys [exit out] :as res} (sh cmd)]
           (is (= 0 exit) (pr-str res))
@@ -77,7 +79,8 @@
           (is (= 0 exit) (pr-str res))
           (is (str/includes? out "No tests found.") (pr-str res)))))
     ;; clojure.test/report reporter
-    (let [cmd ["clojure" "-X:test" ":report" "[clojure.test/report]"]]
+    (doseq [cmd (-> []
+                    (into (prep-cmds [":report" "[clojure.test/report]"])))]
       (testing (pr-str cmd)
         (let [{:keys [exit out] :as res} (sh cmd)]
           (is (= 1 exit) (pr-str res))
@@ -87,12 +90,14 @@
           (is (str/includes? out "Ran 2 tests containing 2 assertions") (pr-str res))
           (is (str/includes? out "1 failures, 0 errors") (pr-str res)))))
     ;; :test-matcher-directories influences which namespaces are initially loaded
-    (doseq [{:keys [cmd pass-loaded?] :as test-case} [{:desc "Load all namespaces"
-                                                       :pass-loaded? true
-                                                       :cmd ["clojure" "-X:test" ":report" "[clojure.test/report]"]}
-                                                      {:desc "Don't load cli-fail.test-pass"
-                                                       :pass-loaded? false
-                                                       :cmd ["clojure" "-X:test" ":report" "[clojure.test/report]" ":test-matcher-directories" "[\"test-fail\"]"]}]]
+    (doseq [{:keys [cmds pass-loaded?] :as test-case} [{:desc "Load all namespaces"
+                                                        :pass-loaded? true
+                                                        :cmds (prep-cmds [":report" "[clojure.test/report]"])}
+                                                       {:desc "Don't load cli-fail.test-pass"
+                                                        :pass-loaded? false
+                                                        :cmds (prep-cmds [":report" "[clojure.test/report]" ":test-matcher-directories" "[\"test-fail\"]"])}]
+            _ (assert (seq cmds))
+            cmd cmds]
       (testing (pr-str test-case)
         (let [{:keys [exit out] :as res} (sh cmd)]
           (is (= 1 exit) (pr-str res))
@@ -101,9 +106,10 @@
           (is (str/includes? out "1 failures, 0 errors") (pr-str res)))))))
 
 (deftest cli-no-tests-test
-  (let [sh #(apply sh/sh (concat % [:dir "test-projects/cli-no-tests"]))]
+  (let [sh (partial sh-in-dir "test-projects/cli-no-tests")]
     ;; check that there are no tests
-    (let [cmd ["clojure" "-X:test"]]
+    (let [cmd (-> []
+                  (into (prep-cmds [])))]
       (testing (pr-str cmd)
         (let [{:keys [exit out] :as res} (sh cmd)]
           (is (= 0 exit) (pr-str res))
