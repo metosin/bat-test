@@ -292,6 +292,7 @@
                      (partition 2 flat-opts)))]
     [args opts]))
 
+;; clojure -A:test -m metosin.bat-test.cli {<default exec args>}? <ns-sym>* (selector-kw selector-non-kw-arg*)* : <exec args>*
 (defn -main [& args]
   (let [[selectors opts] (split-selectors-and-cli-args args)
         [default-opts-map selectors] (let [maybe-default-opts-map (try (read-string (first args))
