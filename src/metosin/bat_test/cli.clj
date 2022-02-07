@@ -89,14 +89,27 @@
     (second (read-file-ns-decl possible-file))
     possible-file))
 
+(defn- opts->selectors [{:keys [only selectors] :as _opts}]
+  (-> []
+      ;; selectors go first in case they are prefixed by namespaces
+      (into (or (when (vector? selectors)
+                  selectors)
+                (when (some? selectors)
+                  [selectors])))
+      (into (or (when (vector? only)
+                  (into [:only] only))
+                (when (some? only)
+                  [:only only])))))
+
 ;; https://github.com/technomancy/leiningen/blob/4d8ee78018158c05d69b250e7851f9d7c3a44fac/src/leiningen/test.clj#L182
 (defn ^:internal -lein-test-read-args
   "Unlike original function, reads list of values, not strings,
   and returns a value, not code.
   
   opts are from `run-tests`."
-  [opts args test-paths quote-args? user-selectors]
-  (let [args (->> args (map -convert-to-ns))
+  [opts test-paths quote-args? user-selectors]
+  (let [args (opts->selectors opts)
+        args (->> args (map -convert-to-ns))
         [nses given-selectors] (-split-selectors args quote-args?)
         nses (or (seq nses)
                  (sort (find-namespaces
@@ -115,19 +128,12 @@
       (throw (ex-info "Could not find test selectors." {})))
     [nses selectors-or-default]))
 
-(defn opts->selectors [{:keys [only selectors] :as _opts}]
-  (-> []
-      ;; selectors go first in case they are prefixed by namespaces
-      (into selectors)
-      (cond-> only (conj :only only))))
-
 (defn- run-tests1
   "Run tests in :test-matcher-directories. Takes the same options as `run-tests`.
   
   Returns a test summary {:fail <num-tests-failed> :error <num-tests-errored>}"
   [opts]
   (let [[namespaces selectors] (-lein-test-read-args opts
-                                                     (opts->selectors opts)
                                                      (:paths opts)
                                                      false
                                                      (-user-test-selectors-form opts))

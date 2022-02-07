@@ -31,8 +31,10 @@
                     ;; selectors from test-selectors.clj
                     (into (prep-cmds [":selectors" "[:just-passing :just-failing]"]))
                     (into (prep-cmds [":selectors" "[:just-failing :only cli-fail.test-pass/i-pass]"]))
+                    ;; :only with 2 args
+                    (into (prep-cmds [":selectors" "[:only cli-fail.test-fail/i-fail cli-fail.test-pass]"]))
+                    (into (prep-cmds [":only" "[cli-fail.test-fail/i-fail cli-fail.test-pass]"]))
                     ;; combine :only and :selectors
-                    (into (prep-cmds [":only" "cli-fail.test-fail/i-fail" ":selectors" "[cli-fail.test-pass]"]))
                     (into (prep-cmds [":only" "cli-fail.test-fail/i-fail" ":selectors" "[:just-passing]"])))]
       (testing (pr-str cmd)
         (let [{:keys [exit out] :as res} (sh cmd)]
@@ -64,6 +66,16 @@
           (is (= 0 exit) (pr-str res))
           (is (str/includes? out "Ran 1 tests") (pr-str res))
           (is (str/includes? out "1 assertion, 0 failures, 0 errors") (pr-str res)))))
+    ;; different ways of running no tests
+    (doseq [cmd (-> []
+                    ;; :only is conj'ed to the end of :selectors, which makes this a conjunction
+                    (into (prep-cmds [":only" "cli-fail.test-fail/i-fail" ":selectors" "[cli-fail.test-pass]"]))
+                    ;; expanded version of the last test
+                    (into (prep-cmds [":selectors" "[cli-fail.test-pass :only cli-fail.test-fail/i-fail]"])))]
+      (testing (pr-str cmd)
+        (let [{:keys [exit out] :as res} (sh cmd)]
+          (is (= 0 exit) (pr-str res))
+          (is (str/includes? out "No tests found.") (pr-str res)))))
     ;; clojure.test/report reporter
     (let [cmd ["clojure" "-X:test" ":report" "[clojure.test/report]"]]
       (testing (pr-str cmd)

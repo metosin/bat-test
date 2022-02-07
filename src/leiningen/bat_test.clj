@@ -128,7 +128,7 @@ eg., lein bat-test : :parallel? true"
    :subtasks      [#'once #'auto]}
   [project & args]
   (let [[subtask args] (or (when-some [op (first args)]
-                             (if (= ":" op)
+                             (if (= ":" op) ;; TODO let : separate selectors and opts in all subtasks
                                ["cli" (next args)]
                                (when (#{"auto" "once" "help" "cloverage"} op)
                                  [op (next args)])))
@@ -144,11 +144,10 @@ eg., lein bat-test : :parallel? true"
         ;; read-args tries to find namespaces in test-paths if args doesn't contain namespaces
         [namespaces selectors] (if cli?
                                  (cli/-lein-test-read-args
-                                   args
-                                   (cli/opts->selectors args)
-                                   nil
-                                   true
-                                   (:test-selectors project))
+                                   args ;; opts
+                                   nil  ;; test-paths
+                                   true ;; quote-args?
+                                   (:test-selectors project)) ;; user-selectors
                                  (test/read-args
                                    args
                                    (assoc project :test-paths nil)))
@@ -170,7 +169,7 @@ eg., lein bat-test : :parallel? true"
                      (main/abort "Tests failed.")))
         do-watch #(run-tests project config true)]
     (case subtask
-      ("once" cloverage) (do-once)
+      ("once" "cloverage") (do-once)
       "auto" (do-watch)
       "help" (println (help/help-for "bat-test"))
       "cli" ((if (:watch config)
