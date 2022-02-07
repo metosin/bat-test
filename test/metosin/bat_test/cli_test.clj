@@ -4,14 +4,22 @@
             [metosin.bat-test.cli :as cli]
             [clojure.java.shell :as sh]))
 
-(defn prep-cmds
-  ([cmd] (prep-cmds #{:cli :lein} cmd))
+(defn prep-exec-cmds
+  ([cmd] (prep-exec-cmds #{:cli :lein} cmd))
   ([impls cmd]
    {:post [(seq %)]}
    (cond-> []
      (:cli impls) (conj (into ["clojure" "-X:test"] cmd)
                         (into ["clojure" "-M:test" ":"] cmd))
      (:lein impls) (conj (into ["lein" "bat-test" ":"] cmd)))))
+
+(defn prep-main-cmds
+  ([cmd] (prep-main-cmds #{:cli :lein} cmd))
+  ([impls cmd]
+   {:post [(seq %)]}
+   (cond-> []
+     (:cli impls) (conj (into ["clojure" "-M:test"] cmd))
+     (:lein impls) (conj (into ["lein" "bat-test"] cmd)))))
 
 (defn sh-in-dir [dir cmd]
   (apply sh/sh (concat cmd [:dir dir
@@ -25,18 +33,20 @@
   (let [sh (partial sh-in-dir "test-projects/cli-fail")]
     ;; different ways of running all tests
     (doseq [cmd (-> []
-                    (into (prep-cmds []))
-                    (into (prep-cmds #{:cli} [":system-exit" "false"]))
-                    (into (prep-cmds [":test-dirs" "[\"test-pass\" \"test-fail\"]"]))
-                    (into (prep-cmds [":selectors" "[cli-fail.test-fail cli-fail.test-pass]"]))
+                    (into (prep-exec-cmds []))
+                    (into (prep-exec-cmds #{:cli} [":system-exit" "false"]))
+                    (into (prep-exec-cmds [":test-dirs" "[\"test-pass\" \"test-fail\"]"]))
+                    (into (prep-exec-cmds [":selectors" "[cli-fail.test-fail cli-fail.test-pass]"]))
                     ;; selectors from test-selectors.clj
-                    (into (prep-cmds [":selectors" "[:just-passing :just-failing]"]))
-                    (into (prep-cmds [":selectors" "[:just-failing :only cli-fail.test-pass/i-pass]"]))
+                    (into (prep-exec-cmds [":selectors" "[:just-passing :just-failing]"]))
+                    (into (prep-exec-cmds [":selectors" "[:just-failing :only cli-fail.test-pass/i-pass]"]))
+                    (into (prep-main-cmds [":just-passing" ":just-failing"]))
+                    (into (prep-main-cmds [":just-passing" ":" ":selectors" "[:just-failing]"]))
                     ;; :only with 2 args
-                    (into (prep-cmds [":selectors" "[:only cli-fail.test-fail/i-fail cli-fail.test-pass]"]))
-                    (into (prep-cmds [":only" "[cli-fail.test-fail/i-fail cli-fail.test-pass]"]))
+                    (into (prep-exec-cmds [":selectors" "[:only cli-fail.test-fail/i-fail cli-fail.test-pass]"]))
+                    (into (prep-exec-cmds [":only" "[cli-fail.test-fail/i-fail cli-fail.test-pass]"]))
                     ;; combine :only and :selectors
-                    (into (prep-cmds [":only" "cli-fail.test-fail/i-fail" ":selectors" "[:just-passing]"])))]
+                    (into (prep-exec-cmds [":only" "cli-fail.test-fail/i-fail" ":selectors" "[:just-passing]"])))]
       (testing (pr-str cmd)
         (let [{:keys [exit out] :as res} (sh cmd)]
           (is (= 1 exit) (pr-str res))
@@ -44,12 +54,12 @@
           (is (str/includes? out "2 assertions, 1 failure, 0 errors") (pr-str res)))))
     ;; different ways of just running `cli-fail.test-fail/i-fail`
     (doseq [cmd (-> []
-                    (into (prep-cmds [":test-dirs" "\"test-fail\""]))
-                    (into (prep-cmds [":test-dirs" "[\"test-fail\"]"]))
-                    (into (prep-cmds [":selectors" "[cli-fail.test-fail]"]))
-                    (into (prep-cmds [":selectors" "[:just-failing]"]))
-                    (into (prep-cmds [":selectors" "[:only cli-fail.test-fail/i-fail]"]))
-                    (into (prep-cmds [":test-matcher" "\"cli-fail.test-fail\""])))]
+                    (into (prep-exec-cmds [":test-dirs" "\"test-fail\""]))
+                    (into (prep-exec-cmds [":test-dirs" "[\"test-fail\"]"]))
+                    (into (prep-exec-cmds [":selectors" "[cli-fail.test-fail]"]))
+                    (into (prep-exec-cmds [":selectors" "[:just-failing]"]))
+                    (into (prep-exec-cmds [":selectors" "[:only cli-fail.test-fail/i-fail]"]))
+                    (into (prep-exec-cmds [":test-matcher" "\"cli-fail.test-fail\""])))]
       (testing (pr-str cmd)
         (let [{:keys [exit out] :as res} (sh cmd)]
           (is (= 1 exit) (pr-str res))
@@ -57,13 +67,13 @@
           (is (str/includes? out "1 assertion, 1 failure, 0 errors") (pr-str res)))))
     ;; different ways of just running `cli-fail.test-pass/i-pass`
     (doseq [cmd (-> []
-                    (into (prep-cmds [":test-dirs" "\"test-pass\""]))
-                    (into (prep-cmds [":test-dirs" "[\"test-pass\"]"]))
-                    (into (prep-cmds [":selectors" "[cli-fail.test-pass]"]))
-                    (into (prep-cmds [":selectors" "[:just-passing]"]))
-                    (into (prep-cmds [":selectors" "[:only cli-fail.test-pass/i-pass]"]))
-                    (into (prep-cmds [":test-matcher" "\"cli-fail.test-pass\""]))
-                    (into (prep-cmds [":test-matcher" "\".*-pass\""])))]
+                    (into (prep-exec-cmds [":test-dirs" "\"test-pass\""]))
+                    (into (prep-exec-cmds [":test-dirs" "[\"test-pass\"]"]))
+                    (into (prep-exec-cmds [":selectors" "[cli-fail.test-pass]"]))
+                    (into (prep-exec-cmds [":selectors" "[:just-passing]"]))
+                    (into (prep-exec-cmds [":selectors" "[:only cli-fail.test-pass/i-pass]"]))
+                    (into (prep-exec-cmds [":test-matcher" "\"cli-fail.test-pass\""]))
+                    (into (prep-exec-cmds [":test-matcher" "\".*-pass\""])))]
       (testing (pr-str cmd)
         (let [{:keys [exit out] :as res} (sh cmd)]
           (is (= 0 exit) (pr-str res))
@@ -72,16 +82,16 @@
     ;; different ways of running no tests
     (doseq [cmd (-> []
                     ;; :only is conj'ed to the end of :selectors, which makes this a conjunction
-                    (into (prep-cmds [":only" "cli-fail.test-fail/i-fail" ":selectors" "[cli-fail.test-pass]"]))
+                    (into (prep-exec-cmds [":only" "cli-fail.test-fail/i-fail" ":selectors" "[cli-fail.test-pass]"]))
                     ;; expanded version of the last test
-                    (into (prep-cmds [":selectors" "[cli-fail.test-pass :only cli-fail.test-fail/i-fail]"])))]
+                    (into (prep-exec-cmds [":selectors" "[cli-fail.test-pass :only cli-fail.test-fail/i-fail]"])))]
       (testing (pr-str cmd)
         (let [{:keys [exit out] :as res} (sh cmd)]
           (is (= 0 exit) (pr-str res))
           (is (str/includes? out "No tests found.") (pr-str res)))))
     ;; clojure.test/report reporter
     (doseq [cmd (-> []
-                    (into (prep-cmds [":report" "[clojure.test/report]"])))]
+                    (into (prep-exec-cmds [":report" "[clojure.test/report]"])))]
       (testing (pr-str cmd)
         (let [{:keys [exit out] :as res} (sh cmd)]
           (is (= 1 exit) (pr-str res))
@@ -93,10 +103,10 @@
     ;; :test-dirs influences which namespaces are initially loaded
     (doseq [{:keys [cmds pass-loaded?] :as test-case} [{:desc "Load all namespaces"
                                                         :pass-loaded? true
-                                                        :cmds (prep-cmds [":report" "[clojure.test/report]"])}
+                                                        :cmds (prep-exec-cmds [":report" "[clojure.test/report]"])}
                                                        {:desc "Don't load cli-fail.test-pass"
                                                         :pass-loaded? false
-                                                        :cmds (prep-cmds [":report" "[clojure.test/report]" ":test-dirs" "[\"test-fail\"]"])}]
+                                                        :cmds (prep-exec-cmds [":report" "[clojure.test/report]" ":test-dirs" "[\"test-fail\"]"])}]
             _ (assert (seq cmds))
             cmd cmds]
       (testing (pr-str test-case)
@@ -110,7 +120,7 @@
   (let [sh (partial sh-in-dir "test-projects/cli-no-tests")]
     ;; check that there are no tests
     (doseq [cmd (-> []
-                    (into (prep-cmds [])))]
+                    (into (prep-exec-cmds [])))]
       (testing (pr-str cmd)
         (let [{:keys [exit out] :as res} (sh cmd)]
           (is (= 0 exit) (pr-str res))
