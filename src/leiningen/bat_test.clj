@@ -87,7 +87,7 @@
 (defn bat-test
 "Run clojure.test tests.
 
-lein bat-test (once|auto|cloverage|help)? <ns-sym>* (selector-kw selector-non-kw-args*)* (: <metosin.bat-test.cli/exec args...>)?
+lein bat-test (once|auto|cloverage|help)? <ns-sym>* (<selector-kw> <selector-non-kw-args>*)* (: <metosin.bat-test.cli/exec args...>)?
 
 Changed namespaces are reloaded using clojure.tools.namespace.
 Only tests in changed or affected namespaces are run.
@@ -133,6 +133,7 @@ eg., lein bat-test my.ns :only foo.bar/baz : :parallel? true"
                                                   [op (next args)])
                                                 ["once" args])
                                   [args flat-opts] (split-with (complement #{":"}) args)
+                                  flat-opts (next flat-opts) ;; remove ":"
                                   _ (assert (even? (count flat-opts)) (str "Uneven arguments to bat-test command line interface: "
                                                                            (pr-str flat-opts)))
                                   opts (not-empty
@@ -146,7 +147,7 @@ eg., lein bat-test my.ns :only foo.bar/baz : :parallel? true"
                                        op)]
                               [op args opts])
         [namespaces selectors] (let [[namespaces1 selectors1]
-                                     (when (some? opts)
+                                     (when (seq opts)
                                        (cli/-lein-test-read-args
                                          opts ;; opts
                                          nil  ;; test-paths
@@ -154,9 +155,10 @@ eg., lein bat-test my.ns :only foo.bar/baz : :parallel? true"
                                          (:test-selectors project))) ;; user-selectors
                                      ;; read-args tries to find namespaces in test-paths if args doesn't contain namespaces
                                      [namespaces2 selectors2]
-                                     (test/read-args
-                                       args
-                                       (assoc project :test-paths nil))]
+                                     (when (seq args)
+                                       (test/read-args
+                                         args
+                                         (assoc project :test-paths nil)))]
                                  [(concat namespaces1 namespaces2)
                                   (concat selectors1 selectors2)])
         ;; :only is now part of `selectors`
@@ -168,6 +170,7 @@ eg., lein bat-test my.ns :only foo.bar/baz : :parallel? true"
                    (into opts)
                    (assoc :selectors (vec selectors)
                           :namespaces (mapv (fn [n] `'~n) namespaces)))
+        _ (prn "config" config)
         do-once #(try
                    (when-let [n (run-tests project config false)]
                      (when (and (number? n) (pos? n))
