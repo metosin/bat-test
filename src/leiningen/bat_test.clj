@@ -155,7 +155,9 @@ eg., lein bat-test my.ns :only foo.bar/baz : :parallel? true"
                                          (:test-selectors project))) ;; user-selectors
                                      ;; read-args tries to find namespaces in test-paths if args doesn't contain namespaces
                                      [namespaces2 selectors2]
-                                     (when (seq args)
+                                     (when (or (seq args)
+                                               ;; TODO unit test this
+                                               (empty? opts))
                                        (test/read-args
                                          args
                                          (assoc project :test-paths nil)))]
