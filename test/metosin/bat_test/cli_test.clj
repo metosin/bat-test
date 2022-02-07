@@ -1,8 +1,21 @@
-(ns metosin.bat-test.cli-test
+(ns ^:eftest/synchronized metosin.bat-test.cli-test
+  (:refer-clojure :exclude [doseq])
   (:require [clojure.test :refer [deftest is testing]]
             [clojure.string :as str]
             [metosin.bat-test.cli :as cli]
             [clojure.java.shell :as sh]))
+
+(defmacro doseq
+  "Parallel doseq via pmap.
+
+  argv must be pure"
+  [argv & body]
+  `(dorun
+     (pmap
+       (fn [f#] (f#))
+       (for ~argv
+         ;; `let` to avoid recur target
+         (fn [] (let [res# (do ~@body)] res#))))))
 
 (defn prep-exec-cmds
   ([cmd] (prep-exec-cmds #{:cli :lein} cmd))
