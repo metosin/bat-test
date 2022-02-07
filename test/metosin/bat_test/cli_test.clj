@@ -10,7 +10,7 @@
    {:post [(seq %)]}
    (cond-> []
      (:cli impls) (conj (into ["clojure" "-X:test"] cmd)
-                        (into ["clojure" "-M:test"] cmd))
+                        (into ["clojure" "-M:test" ":"] cmd))
      (:lein impls) (conj (into ["lein" "bat-test" ":"] cmd)))))
 
 (defn sh-in-dir [dir cmd]
