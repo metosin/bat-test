@@ -132,14 +132,7 @@ eg., lein bat-test my.ns :only foo.bar/baz : :parallel? true"
   (let [[subtask args opts] (let [[op args] (or (when-some [op (#{"auto" "once" "help" "cloverage"} (first args))]
                                                   [op (next args)])
                                                 ["once" args])
-                                  [args flat-opts] (split-with (complement #{":"}) args)
-                                  flat-opts (next flat-opts) ;; remove ":"
-                                  _ (assert (even? (count flat-opts)) (str "Uneven arguments to bat-test command line interface: "
-                                                                           (pr-str flat-opts)))
-                                  opts (not-empty
-                                         (into {}
-                                               (map (fn [[k v]] [(read-string k) (read-string v)]))
-                                               (partition 2 flat-opts)))
+                                  [args flat-opts] (cli/split-selectors-and-cli-args args)
                                   ;; give cli args the last word on auto/once
                                   op (case (:watch opts)
                                        true "auto"

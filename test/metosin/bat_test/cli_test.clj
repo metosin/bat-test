@@ -5,11 +5,12 @@
             [clojure.java.shell :as sh]))
 
 (defn prep-cmds
-  ([cmd] (prep-cmds #{:cli :lein} cmd))
+  ([cmd] (prep-cmds #{:cli-X :cli-M :lein} cmd))
   ([impls cmd]
    {:post [(seq %)]}
    (cond-> []
-     (:cli impls) (conj (into ["clojure" "-X:test"] cmd))
+     (:cli impls) (conj (into ["clojure" "-X:test"] cmd)
+                        (into ["clojure" "-M:test"] cmd))
      (:lein impls) (conj (into ["lein" "bat-test" ":"] cmd)))))
 
 (defn sh-in-dir [dir cmd]

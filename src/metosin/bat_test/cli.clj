@@ -279,3 +279,24 @@
   (-> -default-exec-args
       (into args)
       test))
+
+(defn split-selectors-and-cli-args [args]
+  (let [[args flat-opts] (split-with (complement #{":"}) args)
+        ;; remove ":"
+        flat-opts (next flat-opts)
+        _ (assert (even? (count flat-opts)) (str "Uneven arguments to bat-test command line interface: "
+                                                 (pr-str flat-opts)))
+        opts (not-empty
+               (into {}
+                     (map (fn [[k v]] [(read-string k) (read-string v)]))
+                     (partition 2 flat-opts)))]
+    [args opts]))
+
+(defn -main [& args]
+  (let [[selectors opts] (split-selectors-and-cli-args args)
+        [default-opts-map selectors] (let [maybe-default-opts-map (try (read-string (first args))
+                                                                       (catch Exception _))]
+                                       (if (map? maybe-default-opts-map)
+                                         [maybe-default-opts-map (next selectors)]
+                                         [{} selectors]))]
+    (exec (into default-opts-map opts))))
