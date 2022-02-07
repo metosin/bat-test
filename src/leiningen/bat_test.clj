@@ -132,7 +132,7 @@ eg., lein bat-test my.ns :only foo.bar/baz : :parallel? true"
   (let [[subtask args opts] (let [[op args] (or (when-some [op (#{"auto" "once" "help" "cloverage"} (first args))]
                                                   [op (next args)])
                                                 ["once" args])
-                                  [args flat-opts] (cli/split-selectors-and-cli-args args)
+                                  [args opts] (cli/split-selectors-and-cli-args args)
                                   ;; give cli args the last word on auto/once
                                   op (case (:watch opts)
                                        true "auto"
