@@ -5,7 +5,7 @@
             [clojure.java.shell :as sh]))
 
 (defn prep-cmds
-  ([cmd] (prep-cmds #{:cli-X :cli-M :lein} cmd))
+  ([cmd] (prep-cmds #{:cli :lein} cmd))
   ([impls cmd]
    {:post [(seq %)]}
    (cond-> []

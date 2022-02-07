@@ -34,13 +34,18 @@
       (assert (map? selectors) (format "Selectors in file %s must be a map" test-selectors-form-file)))
     selectors))
 
+;; returns [ns selectors]
+(defn- separate-selectors-from-nses [args]
+  (split-with (complement keyword?) args))
+
 ;; https://github.com/technomancy/leiningen/blob/4d8ee78018158c05d69b250e7851f9d7c3a44fac/src/leiningen/test.clj#L144-L154
 (defn- -split-selectors
   "Selectors are (namespace*)(selector-kw selector-non-kw-arg*)*
 
-  Unlike original function, returns a value--not code."
+  If quote-args? is true, is like the original function (returns code).
+  Otherwise, returns a value--not code."
   [args quote-args?]
-  (let [[nses selectors] (split-with (complement keyword?) args)]
+  (let [[nses selectors] (separate-selectors-from-nses args)]
     [nses
      (loop [acc {} [selector & selectors] selectors]
        (if (seq selectors)
@@ -263,6 +268,7 @@
    :enter-key-listener true
    :system-exit true})
 
+;; clojure -X:test <exec args...>
 (defn exec
   "Run tests via Clojure CLI's -X flag.
 
@@ -280,24 +286,52 @@
       (into args)
       test))
 
-(defn split-selectors-and-cli-args [args]
+;; simulate :exec-args https://clojure.org/reference/deps_and_cli#_execute_a_function
+(defn- assoc-exec-arg [m [k v]]
+  ((if (vector? k) assoc-in assoc) m k v))
+
+(defn split-selectors-and-cli-args [default-opts-map args]
   (let [[args flat-opts] (split-with (complement #{":"}) args)
-        ;; remove ":"
-        flat-opts (next flat-opts)
+        flat-opts (->> flat-opts
+                       ;; remove ":"
+                       next
+                       (map read-string))
         _ (assert (even? (count flat-opts)) (str "Uneven arguments to bat-test command line interface: "
                                                  (pr-str flat-opts)))
         opts (not-empty
-               (into {}
-                     (map (fn [[k v]] [(read-string k) (read-string v)]))
-                     (partition 2 flat-opts)))]
+               (reduce assoc-exec-arg
+                       (or default-opts-map {})
+                       (partition 2 flat-opts)))]
     [args opts]))
 
-;; clojure -A:test -m metosin.bat-test.cli {<default exec args>}? <ns-sym>* (selector-kw selector-non-kw-arg*)* : <exec args>*
+(defn add-lein-style-selectors-to-opts [selectors opts]
+  (let [;; https://github.com/technomancy/leiningen/blob/4d8ee78018158c05d69b250e7851f9d7c3a44fac/src/leiningen/test.clj#L183
+        selectors (->> selectors (map -convert-to-ns) (map read-string))
+        ;;
+        [nses1 selectors1] (separate-selectors-from-nses (:selectors opts))
+        [nses2 selectors2] (separate-selectors-from-nses selectors)
+        selectors (vec (concat nses1 nses2 selectors1 selectors2))]
+    (cond-> opts
+      (seq selectors) (assoc :selectors selectors))))
+
+;; clojure -A:test -m metosin.bat-test.cli {(:exec-args-file <path>)? <default exec args...>}? <ns-sym>* (selector-kw selector-non-kw-arg*)* (: <exec args...>)?
 (defn -main [& args]
-  (let [[selectors opts] (split-selectors-and-cli-args args)
-        [default-opts-map selectors] (let [maybe-default-opts-map (try (read-string (first args))
-                                                                       (catch Exception _))]
-                                       (if (map? maybe-default-opts-map)
-                                         [maybe-default-opts-map (next selectors)]
-                                         [{} selectors]))]
+  (let [[default-opts-map args] (let [maybe-default-opts-map (try (read-string (first args))
+                                                                  ;; could be ":"
+                                                                  (catch Exception _))]
+                                  (if (map? maybe-default-opts-map)
+                                    (let [{:keys [exec-args-file]} maybe-default-opts-map
+                                          maybe-exec-args-file-form (some-> exec-args-file slurp read-string)
+                                          default-opts-map (if (map? maybe-exec-args-file-form)
+                                                             ;; existing opts take precedence over :exec-args-file
+                                                             (into maybe-exec-args-file-form
+                                                                   (dissoc maybe-default-opts-map :exec-args-file))
+                                                             {})]
+                                      [default-opts-map (next args)])
+                                    [{} args]))
+        [selectors opts] (split-selectors-and-cli-args
+                           default-opts-map
+                           args)
+        opts (add-lein-style-selectors-to-opts selectors opts)]
+    (prn opts)
     (exec (into default-opts-map opts))))

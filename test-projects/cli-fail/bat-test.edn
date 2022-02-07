@@ -1,0 +1,2 @@
+{:test-selectors-form-file "test-selectors.clj"
+ :test-matcher-directories ["test-fail" "test-pass"]}

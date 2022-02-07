@@ -129,23 +129,29 @@ eg., lein bat-test my.ns :only foo.bar/baz : :parallel? true"
   {:help-arglists '([& tests])
    :subtasks      [#'once #'auto]}
   [project & args]
-  (let [[subtask args opts] (let [[op args] (or (when-some [op (#{"auto" "once" "help" "cloverage"} (first args))]
+  (let [opts (into {:enter-key-listener true}
+                   (:bat-test project))
+        [subtask args opts] (let [[op args] (or (when-some [op (#{"auto" "once" "help" "cloverage"} (first args))]
                                                   [op (next args)])
                                                 ["once" args])
-                                  [args opts] (cli/split-selectors-and-cli-args args)
-                                  ;; give cli args the last word on auto/once
+                                  [args opts] (cli/split-selectors-and-cli-args
+                                                (into {:cloverage (= "cloverage" op)} opts)
+                                                args)
+                                  ;; give cli args the last word on auto/once. :cloverage value will be preserved via opts.
                                   op (case (:watch opts)
                                        true "auto"
                                        false "once"
                                        op)]
                               [op args opts])
-        [namespaces selectors] (let [[namespaces1 selectors1]
+        [namespaces selectors] (let [;; selectors after :
+                                     [namespaces1 selectors1]
                                      (when (seq opts)
                                        (cli/-lein-test-read-args
                                          opts ;; opts
                                          nil  ;; test-paths
                                          true ;; quote-args?
                                          (:test-selectors project))) ;; user-selectors
+                                     ;; selectors before :
                                      ;; read-args tries to find namespaces in test-paths if args doesn't contain namespaces
                                      [namespaces2 selectors2]
                                      (when (or (seq args)
@@ -154,18 +160,15 @@ eg., lein bat-test my.ns :only foo.bar/baz : :parallel? true"
                                        (test/read-args
                                          args
                                          (assoc project :test-paths nil)))]
+                                 ;; combine in disjunction
                                  [(concat namespaces1 namespaces2)
                                   (concat selectors1 selectors2)])
         ;; :only is now part of `selectors`
         opts (dissoc opts :only)
         project (project/merge-profiles project [:leiningen/test :test profile])
-        config (-> {:enter-key-listener true}
-                   (into (:bat-test project))
-                   (assoc :cloverage (= "cloverage" subtask))
-                   (into opts)
+        config (-> opts
                    (assoc :selectors (vec selectors)
                           :namespaces (mapv (fn [n] `'~n) namespaces)))
-        _ (prn "config" config)
         do-once #(try
                    (when-let [n (run-tests project config false)]
                      (when (and (number? n) (pos? n))
