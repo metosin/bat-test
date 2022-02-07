@@ -87,6 +87,8 @@
 (defn bat-test
 "Run clojure.test tests.
 
+lein bat-test (once|auto|cloverage|help)? <ns-sym>* (selector-kw selector-non-kw-args*)* (: <metosin.bat-test.cli/exec args...>)?
+
 Changed namespaces are reloaded using clojure.tools.namespace.
 Only tests in changed or affected namespaces are run.
 
@@ -119,46 +121,51 @@ Available options:
 Also supports Lein test selectors, check `lein test help` for more information.
 
 Arguments:
-- once, auto, cloverage, help
+- once (default), auto, cloverage, help
 - test selectors
 
-If first argument is a colon, provides the same interface as metosin.bat-test.cli/exec:
-eg., lein bat-test : :parallel? true"
+Provides the same interface as metosin.bat-test.cli/exec for arguments after `:`.
+eg., lein bat-test my.ns :only foo.bar/baz : :parallel? true"
   {:help-arglists '([& tests])
    :subtasks      [#'once #'auto]}
   [project & args]
-  (let [[subtask args] (or (when-some [op (first args)]
-                             (if (= ":" op) ;; TODO let : separate selectors and opts in all subtasks
-                               ["cli" (next args)]
-                               (when (#{"auto" "once" "help" "cloverage"} op)
-                                 [op (next args)])))
-                           ["once" args])
-        cli? (= "cli" subtask)
-        args (if cli?
-               (do (assert (even? (count args)) (str "Uneven arguments to bat-test command line interface: "
-                                                     (pr-str args)))
-                   (into {}
-                         (map (fn [[k v]] [(read-string k) (read-string v)]))
-                         (partition 2 args)))
-               args)
-        ;; read-args tries to find namespaces in test-paths if args doesn't contain namespaces
-        [namespaces selectors] (if cli?
-                                 (cli/-lein-test-read-args
-                                   args ;; opts
-                                   nil  ;; test-paths
-                                   true ;; quote-args?
-                                   (:test-selectors project)) ;; user-selectors
-                                 (test/read-args
-                                   args
-                                   (assoc project :test-paths nil)))
-        args (cond-> args
-               ;; :only is now part of `selectors`
-               cli? (dissoc :only))
+  (let [[subtask args opts] (let [[op args] (or (when-some [op (#{"auto" "once" "help" "cloverage"} (first args))]
+                                                  [op (next args)])
+                                                ["once" args])
+                                  [args flat-opts] (split-with (complement #{":"}) args)
+                                  _ (assert (even? (count flat-opts)) (str "Uneven arguments to bat-test command line interface: "
+                                                                           (pr-str flat-opts)))
+                                  opts (not-empty
+                                         (into {}
+                                               (map (fn [[k v]] [(read-string k) (read-string v)]))
+                                               (partition 2 flat-opts)))
+                                  ;; give cli args the last word on auto/once
+                                  op (case (:watch opts)
+                                       true "auto"
+                                       false "once"
+                                       op)]
+                              [op args opts])
+        [namespaces selectors] (let [[namespaces1 selectors1]
+                                     (when (some? opts)
+                                       (cli/-lein-test-read-args
+                                         opts ;; opts
+                                         nil  ;; test-paths
+                                         true ;; quote-args?
+                                         (:test-selectors project))) ;; user-selectors
+                                     ;; read-args tries to find namespaces in test-paths if args doesn't contain namespaces
+                                     [namespaces2 selectors2]
+                                     (test/read-args
+                                       args
+                                       (assoc project :test-paths nil))]
+                                 [(concat namespaces1 namespaces2)
+                                  (concat selectors1 selectors2)])
+        ;; :only is now part of `selectors`
+        opts (dissoc opts :only)
         project (project/merge-profiles project [:leiningen/test :test profile])
         config (-> {:enter-key-listener true}
                    (into (:bat-test project))
                    (assoc :cloverage (= "cloverage" subtask))
-                   (into (when cli? args))
+                   (into opts)
                    (assoc :selectors (vec selectors)
                           :namespaces (mapv (fn [n] `'~n) namespaces)))
         do-once #(try
@@ -172,7 +179,4 @@ eg., lein bat-test : :parallel? true"
       ("once" "cloverage") (do-once)
       "auto" (do-watch)
       "help" (println (help/help-for "bat-test"))
-      "cli" ((if (:watch config)
-               do-watch
-               do-once))
       (main/warn "Unknown task."))))
