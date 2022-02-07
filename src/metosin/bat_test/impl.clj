@@ -131,9 +131,12 @@
   {:pre [(or (instance? java.util.regex.Pattern test-matcher)
              (string? test-matcher))
          (or (nil? test-dirs)
+             (string? test-dirs)
              (coll? test-dirs))]
    :post [(instance? java.util.regex.Pattern %)]}
-  (let [re-and (fn [rs]
+  (let [test-dirs (cond-> test-dirs
+                    (string? test-dirs) vector)
+        re-and (fn [rs]
                  {:pre [(every? #(instance? java.util.regex.Pattern %) rs)]
                   :post [(instance? java.util.regex.Pattern %)]}
                  (case (count rs)
