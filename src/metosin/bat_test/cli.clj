@@ -245,6 +245,14 @@
       (set/rename-keys {:capture-output :capture-output?
                         :parallel :parallel?})))
 
+(defn- add-exec-args-file [{:keys [exec-args-file] :as opts}]
+  (let [maybe-exec-args-file-form (some-> exec-args-file slurp read-string)]
+    (if (map? maybe-exec-args-file-form)
+      ;; existing opts take precedence over :exec-args-file
+      (into (massage-cli-args maybe-exec-args-file-form)
+            (dissoc opts :exec-args-file))
+      opts)))
+
 (defn test
   "Run tests with some useful defaults for REPL usage.
 
@@ -256,9 +264,12 @@
   - :capture-output  Alias for `:capture-output?`
   - :system-exit  If true and :watch is not true, exit via System/exit (code 0 if tests pass, 1 on failure).
                   If not true and :watch is not true, throw an exception if tests fail.
-                  Default: nil"
+                  Default: nil
+  - :exec-args-file  A file path containing default arguments for this function. Useful to share your default
+                     config between REPL and CLI."
   [args]
-  (let [args (massage-cli-args args)]
+  (let [args (-> (massage-cli-args args)
+                 add-exec-args-file)]
     (if (:watch args)
       (run-tests args)
       (-wrap-run-tests1 args))))
@@ -320,14 +331,7 @@
                                                                   ;; could be ":"
                                                                   (catch Exception _))]
                                   (if (map? maybe-default-opts-map)
-                                    (let [{:keys [exec-args-file]} maybe-default-opts-map
-                                          maybe-exec-args-file-form (some-> exec-args-file slurp read-string)
-                                          default-opts-map (if (map? maybe-exec-args-file-form)
-                                                             ;; existing opts take precedence over :exec-args-file
-                                                             (into maybe-exec-args-file-form
-                                                                   (dissoc maybe-default-opts-map :exec-args-file))
-                                                             {})]
-                                      [default-opts-map (next args)])
+                                    [(add-exec-args-file maybe-default-opts-map) (next args)]
                                     [{} args]))
         [selectors opts] (split-selectors-and-cli-args
                            default-opts-map

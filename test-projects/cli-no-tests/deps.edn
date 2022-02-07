@@ -3,4 +3,5 @@
                   :extra-deps {metosin/bat-test {:local/root "../.."
                                                  :deps/manifest :deps}}
                   :exec-fn metosin.bat-test.cli/exec
-                  :exec-args {:test-dirs ["test"]}}}}
+                  :exec-args {:test-dirs ["test"]}
+                  :main-opts ["-m" "metosin.bat-test.cli" "{:exec-args-file \"bat-test.edn\"}"]}}}
