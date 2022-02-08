@@ -1,7 +1,8 @@
 (def bat-test-version
-  (:out ((requiring-resolve 'clojure.java.shell/sh)
-         "clojure" "-T:build" "install"
-         :dir "../..")))
+  (or (System/getenv "INSTALLED_BAT_TEST_VERSION")
+      (:out ((requiring-resolve 'clojure.java.shell/sh)
+             "clojure" "-T:build" "install"
+             :dir "../.."))))
 (defproject metosin-test/cli-fail "1.0.0-SNAPSHOT"
   :test-paths ["test-pass"
                "test-fail"]

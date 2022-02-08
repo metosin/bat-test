@@ -1,21 +1,30 @@
 (ns ^:eftest/synchronized metosin.bat-test.cli-test
+  "doseq is used to parallelize tests and install bat-test jar.
+  Always wrap assertions about the shell in a doseq for reliability."
   (:refer-clojure :exclude [doseq])
   (:require [clojure.test :refer [deftest is testing]]
             [clojure.string :as str]
             [metosin.bat-test.cli :as cli]
             [clojure.java.shell :as sh]))
 
+(defn install-bat-test-jar []
+  (:out (sh/sh "clojure" "-T:build" "install")))
+
+(def ^:dynamic *bat-test-jar-version* nil)
+
 (defmacro doseq
   "Parallel doseq via pmap.
 
   argv must be pure"
   [argv & body]
-  `(dorun
-     (pmap
-       (fn [f#] (f#))
-       (for ~argv
-         ;; `let` to avoid recur target
-         (fn [] (let [res# (do ~@body)] res#))))))
+  `(binding [;; install jar synchronously
+             *bat-test-jar-version* (install-bat-test-jar)] 
+     (dorun
+       (pmap
+         (fn [f#] (f#))
+         (for ~argv
+           ;; `let` to avoid recur target
+           (fn [] (let [res# (do ~@body)] res#)))))))
 
 (defn prep-exec-cmds
   ([cmd] (prep-exec-cmds #{:cli :lein} cmd))
@@ -36,11 +45,13 @@
 
 (defn sh-in-dir [dir cmd]
   (apply sh/sh (concat cmd [:dir dir
-                            :env (assoc (into {} (System/getenv))
-                                        ;; https://github.com/technomancy/leiningen/issues/2611
-                                        "LEIN_JVM_OPTS" ""
-                                        ;; jvm 17 support for fipp https://github.com/brandonbloom/fipp/issues/60
-                                        "LEIN_USE_BOOTCLASSPATH" "no")])))
+                            :env (-> (into {} (System/getenv))
+                                     (assoc ;; https://github.com/technomancy/leiningen/issues/2611
+                                            "LEIN_JVM_OPTS" ""
+                                            ;; jvm 17 support for fipp https://github.com/brandonbloom/fipp/issues/60
+                                            "LEIN_USE_BOOTCLASSPATH" "no")
+                                     (cond->
+                                       *bat-test-jar-version* (assoc "INSTALLED_BAT_TEST_VERSION" *bat-test-jar-version*)))])))
 
 (deftest cli-fail-test
   (let [sh (partial sh-in-dir "test-projects/cli-fail")]
