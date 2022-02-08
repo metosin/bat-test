@@ -18,7 +18,7 @@
   argv must be pure"
   [argv & body]
   `(binding [;; install jar synchronously
-             *bat-test-jar-version* (install-bat-test-jar)] 
+             *bat-test-jar-version* (install-bat-test-jar)]
      (dorun
        (pmap
          (fn [f#] (f#))
@@ -69,8 +69,12 @@
                     ;; :only with 2 args
                     (into (prep-exec-cmds [":selectors" "[:only cli-fail.test-fail/i-fail cli-fail.test-pass]"]))
                     (into (prep-exec-cmds [":only" "[cli-fail.test-fail/i-fail cli-fail.test-pass]"]))
+                    (into (prep-main-cmds [":only" "cli-fail.test-fail/i-fail" "cli-fail.test-pass"]))
                     ;; combine :only and :selectors
-                    (into (prep-exec-cmds [":only" "cli-fail.test-fail/i-fail" ":selectors" "[:just-passing]"])))]
+                    (into (prep-exec-cmds [":only" "cli-fail.test-fail/i-fail" ":selectors" "[:just-passing]"]))
+                    (into (prep-main-cmds [":only" "cli-fail.test-fail/i-fail" ":just-passing"]))
+                    (into (prep-main-cmds [":only" "cli-fail.test-fail/i-fail" ":" ":selectors" "[:just-passing]"]))
+                    (into (prep-main-cmds [":just-passing" ":" ":only" "cli-fail.test-fail/i-fail"])))]
       (testing (pr-str cmd)
         (let [{:keys [exit out] :as res} (sh cmd)]
           (is (= 1 exit) (pr-str res))
