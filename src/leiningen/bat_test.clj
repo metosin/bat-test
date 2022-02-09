@@ -172,9 +172,12 @@ eg., lein bat-test my.ns :only foo.bar/baz : :parallel? true"
                                        false "once"
                                        op)]
                               [op args opts])
-        [namespaces selectors] (let [;; selectors after :
+        [namespaces selectors] (let [;; suppress cli selectors if they're just the defaults.
+                                     use-cli-selectors? (or (seq (:selectors opts))
+                                                            (some? (:only opts)))
+                                     ;; selectors after :
                                      [namespaces1 selectors1]
-                                     (when (seq (:selectors opts))
+                                     (when use-cli-selectors?
                                        (cli/-lein-test-read-args
                                          opts ;; opts
                                          true ;; quote-args?
@@ -183,7 +186,7 @@ eg., lein bat-test my.ns :only foo.bar/baz : :parallel? true"
                                      [namespaces2 selectors2]
                                      (when (or (seq args)
                                                ;; TODO unit test this
-                                               (empty? opts))
+                                               (not use-cli-selectors?))
                                        (test/read-args
                                          args
                                          ;; read-args tries to find namespaces in test-paths if args doesn't contain namespaces.
