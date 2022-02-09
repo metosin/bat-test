@@ -57,6 +57,7 @@
         (:test-dirs opts)
         (update :test-dirs absolutize-paths))))
 
+;; TODO test directory sensitivity
 ;; assumes opts is absolutized
 (defn- run-tests [project opts watch?]
   (let [{:keys [watch-directories] :as opts}
@@ -188,6 +189,7 @@ eg., lein bat-test my.ns :only foo.bar/baz : :parallel? true"
                                                ;; TODO unit test this
                                                (not use-cli-selectors?))
                                        (test/read-args
+                                         ;; TODO absolutize file/dir args?
                                          args
                                          ;; read-args tries to find namespaces in test-paths if args doesn't contain namespaces.
                                          ;; suppress this by setting :test-paths to nil.
