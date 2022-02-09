@@ -148,7 +148,6 @@ eg., lein bat-test my.ns :only foo.bar/baz : :parallel? true"
                                      (when (seq opts)
                                        (cli/-lein-test-read-args
                                          opts ;; opts
-                                         nil  ;; test-paths
                                          true ;; quote-args?
                                          (:test-selectors project))) ;; user-selectors
                                      ;; selectors before :

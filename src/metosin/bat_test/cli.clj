@@ -112,13 +112,10 @@
   and returns a value, not code.
   
   opts are from `run-tests`."
-  [opts test-paths quote-args? user-selectors]
+  [opts quote-args? user-selectors]
   (let [args (opts->selectors opts)
         args (->> args (map -convert-to-ns))
         [nses given-selectors] (-split-selectors args quote-args?)
-        nses (or (seq nses)
-                 (sort (find-namespaces
-                         (map io/file (distinct test-paths)))))
         default-selectors {:all `(constantly true)
                            :only -only-form}
         selectors (-partial-selectors (into default-selectors
@@ -139,11 +136,9 @@
   Returns a test summary {:fail <num-tests-failed> :error <num-tests-errored>}"
   [opts]
   (let [[namespaces selectors] (-lein-test-read-args opts
-                                                     (:paths opts)
                                                      false
                                                      (-user-test-selectors-form opts))
-        opts (dissoc opts :only)
-        {:keys [test-dirs]} opts]
+        opts (dissoc opts :only)]
     (impl/run
       (-> opts
           ;; convert from `lein test`-style :selectors to internal bat-test representation.
