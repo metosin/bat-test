@@ -65,13 +65,17 @@ See `lein bat-test help` for a list of available task options.
 
 ## Clojure CLI Usage
 
+### Main style
+
+### Exec style
+
 Add the following alias to your deps.edn:
 
 ```clojure
 {:aliases {:test {:extra-deps {metosin/bat-test {...}}
                   :extra-paths ["test"]
                   :exec-fn metosin.bat-test.cli/exec
-                  :exec-args {}}}}
+                  :exec-args {:test-dirs ["test"]}}}}
 ```
 
 Invoke with exec (`-X`), and see `metosin.bat-test.cli/{test,exec,run-tests}` for options. Here are some examples:
@@ -92,7 +96,6 @@ clojure -X:test :test-dirs '["module1" "module3"]'
 # use Leiningen-style test selectors (see next section for custom selectors)
 clojure -X:test :selectors '[:all]' # <- lein test :all
 clojure -X:test :selectors '[my-ns :only other-ns/foo]' # <- lein test my-ns :only other-ns/foo
-clojure -X:test :only other-ns/foo # <- lein test :only other-ns/foo
 ```
 
 ### Handy default arguments

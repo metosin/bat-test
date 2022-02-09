@@ -94,17 +94,12 @@
     (second (read-file-ns-decl possible-file))
     possible-file))
 
-(defn- opts->selectors [{:keys [only selectors] :as _opts}]
+(defn- opts->selectors [{:keys [selectors] :as _opts}]
   (-> []
-      ;; selectors go first in case they are prefixed by namespaces
       (into (or (when (vector? selectors)
                   selectors)
                 (when (some? selectors)
-                  [selectors])))
-      (into (or (when (vector? only)
-                  (into [:only] only))
-                (when (some? only)
-                  [:only only])))))
+                  [selectors])))))
 
 ;; https://github.com/technomancy/leiningen/blob/4d8ee78018158c05d69b250e7851f9d7c3a44fac/src/leiningen/test.clj#L182
 (defn ^:internal -lein-test-read-args
@@ -137,8 +132,7 @@
   [opts]
   (let [[namespaces selectors] (-lein-test-read-args opts
                                                      false
-                                                     (-user-test-selectors-form opts))
-        opts (dissoc opts :only)]
+                                                     (-user-test-selectors-form opts))]
     (impl/run
       (-> opts
           ;; convert from `lein test`-style :selectors to internal bat-test representation.
@@ -160,17 +154,11 @@
        <=>
        lein test my.ns my/file.clj :disable :only foo/bar :integration
 
-  There is special support for the `:only` selector.
-  eg., (run-tests :only 'foo/bar :selectors '[blah thing])
-       <=>
-       (run-tests :selectors '[:only foo/bar blah thing])
-
   Available options:
   :watch             If true, continuously watch and reload (loaded) namespaces in
                      :watch-directories, and run tests in :test-dirs when needed.
                      Default: false
   :selectors         A vector of test selectors.
-  :only              A qualified deftest var to test only. `:only <provided arg>` will be added to existing :selectors.
   :test-matcher      The regex used to select test namespaces. A string can also be provided which will be coerce via `re-pattern`.
   :parallel?         Run tests parallel (default off)
   :capture-output?   Display logs even if tests pass (option for Eftest test runner)

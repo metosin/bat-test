@@ -77,13 +77,10 @@
                   (into (prep-main-cmds [":just-passing" ":" ":selectors" "[:just-failing]"]))
                   ;; :only with 2 args
                   (into (prep-exec-cmds [":selectors" "[:only cli-fail.test-fail/i-fail cli-fail.test-pass]"]))
-                  (into (prep-exec-cmds [":only" "[cli-fail.test-fail/i-fail cli-fail.test-pass]"]))
-                  (into (prep-main-cmds [":only" "cli-fail.test-fail/i-fail" "cli-fail.test-pass"]))
                   ;; combine :only and :selectors
-                  (into (prep-exec-cmds [":only" "cli-fail.test-fail/i-fail" ":selectors" "[:just-passing]"]))
                   (into (prep-main-cmds [":only" "cli-fail.test-fail/i-fail" ":just-passing"]))
                   (into (prep-main-cmds [":only" "cli-fail.test-fail/i-fail" ":" ":selectors" "[:just-passing]"]))
-                  (into (prep-main-cmds [":just-passing" ":" ":only" "cli-fail.test-fail/i-fail"])))]
+                  (into (prep-main-cmds [":just-passing" ":" ":selectors" "[:only cli-fail.test-fail/i-fail]"])))]
     (testing (pr-str cmd)
       (let [{:keys [exit out] :as res} (sh-in-cli-fail cmd)]
         (is (= 1 exit) (pr-str res))
@@ -124,12 +121,9 @@
 (deftest cli-fail-test-no-tests
   ;; different ways of running no tests
   (doseq [cmd (-> []
-                  ;; :only is conj'ed to the end of :selectors, which makes this a conjunction
-                  (into (prep-exec-cmds [":only" "cli-fail.test-fail/i-fail" ":selectors" "[cli-fail.test-pass]"]))
-                  ;; expanded version of the last test
+                  ;; namespace before :only a conjunction
                   (into (prep-exec-cmds [":selectors" "[cli-fail.test-pass :only cli-fail.test-fail/i-fail]"]))
                   ;; same, but via main
-                  ;; FIXME fails for lein
                   (into (prep-main-cmds ["cli-fail.test-pass" ":only" "cli-fail.test-fail/i-fail"])))]
     (testing (pr-str cmd)
       (let [{:keys [exit out] :as res} (sh-in-cli-fail cmd)]

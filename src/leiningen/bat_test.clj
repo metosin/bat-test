@@ -174,8 +174,7 @@ eg., lein bat-test my.ns :only foo.bar/baz : :parallel? true"
                                        op)]
                               [op args opts])
         [namespaces selectors] (let [;; suppress cli selectors if they're just the defaults.
-                                     use-cli-selectors? (or (seq (:selectors opts))
-                                                            (some? (:only opts)))
+                                     use-cli-selectors? (seq (:selectors opts))
                                      ;; selectors after :
                                      [namespaces1 selectors1]
                                      (when use-cli-selectors?
@@ -201,8 +200,6 @@ eg., lein bat-test my.ns :only foo.bar/baz : :parallel? true"
                                  ;; combine in disjunction
                                  [(concat namespaces1 namespaces2)
                                   (concat selectors1 selectors2)])
-        ;; :only is now part of `selectors`
-        opts (dissoc opts :only)
         project (project/merge-profiles project [:leiningen/test :test profile])
         config (-> opts
                    (assoc :selectors (vec selectors)
