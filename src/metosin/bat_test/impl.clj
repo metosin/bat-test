@@ -117,13 +117,11 @@
 
 (defn maybe-run-cloverage [run-tests opts changed-ns test-namespaces]
   (if (:cloverage opts)
-    (do (require 'metosin.bat-test.cloverage)
-
-        ((resolve 'metosin.bat-test.cloverage/wrap-cloverage)
-         ;; Don't instrument -test namespaces
-         (remove #(contains? (set test-namespaces) %) changed-ns)
-         (:cloverage-opts opts)
-         run-tests))
+    ((requiring-resolve 'metosin.bat-test.cloverage/wrap-cloverage)
+     ;; Don't instrument -test namespaces
+     (remove #(contains? (set test-namespaces) %) changed-ns)
+     (:cloverage-opts opts)
+     run-tests)
     (run-tests)))
 
 (defn test-matcher-only-in-directories [test-matcher
@@ -244,6 +242,7 @@
             (util/warn "Exception: %s\n" (.getMessage e))))))) )
 
 (defn run [{:keys [on-end watch-directories notify-command] :as opts}]
+  (prn `run opts)
   (try
     (reset! running true)
     (swap! tracker (fn [tracker]

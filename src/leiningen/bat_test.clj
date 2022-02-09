@@ -44,16 +44,18 @@
         (io/file (System/getProperty "leiningen.original.pwd")
                  path)))))
 
+(defn- absolutize-paths [paths]
+  (mapv absolutize-path (cond-> paths
+                          (string? paths) vector)))
+
 (defn- absolutize-opts [opts]
   (-> opts
       (cond->
         (:watch-directories opts)
-        (update :watch-directories (fn [watch-directories]
-                                     (mapv absolutize-path watch-directories))))
+        (update :watch-directories absolutize-paths))
       (cond->
         (:test-dirs opts)
-        (update :test-dirs (fn [test-dirs]
-                             (mapv absolutize-path test-dirs))))))
+        (update :test-dirs absolutize-paths))))
 
 ;; assumes opts is absolutized
 (defn- run-tests [project opts watch?]
@@ -66,6 +68,7 @@
                                                           (:source-paths project)
                                                           (:resource-paths project))))))
             absolutize-opts)]
+    (prn `run-tests opts)
     (eval/eval-in-project
       project
       (if watch?
@@ -171,20 +174,25 @@ eg., lein bat-test my.ns :only foo.bar/baz : :parallel? true"
                               [op args opts])
         [namespaces selectors] (let [;; selectors after :
                                      [namespaces1 selectors1]
-                                     (when (seq opts)
+                                     (when (seq (:selectors opts))
                                        (cli/-lein-test-read-args
                                          opts ;; opts
                                          true ;; quote-args?
                                          (:test-selectors project))) ;; user-selectors
                                      ;; selectors before :
-                                     ;; read-args tries to find namespaces in test-paths if args doesn't contain namespaces
                                      [namespaces2 selectors2]
                                      (when (or (seq args)
                                                ;; TODO unit test this
                                                (empty? opts))
                                        (test/read-args
                                          args
+                                         ;; read-args tries to find namespaces in test-paths if args doesn't contain namespaces.
+                                         ;; suppress this by setting :test-paths to nil.
                                          (assoc project :test-paths nil)))]
+                                 ;(prn 'namespaces1 namespaces1)
+                                 ;(prn 'namespaces2 namespaces2)
+                                 ;(prn 'selectors1 selectors1)
+                                 ;(prn 'selectors2 selectors2)
                                  ;; combine in disjunction
                                  [(concat namespaces1 namespaces2)
                                   (concat selectors1 selectors2)])

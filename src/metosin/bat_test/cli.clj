@@ -11,25 +11,26 @@
             [metosin.bat-test.util :as util]))
 
 ;; https://github.com/technomancy/leiningen/blob/4d8ee78018158c05d69b250e7851f9d7c3a44fac/src/leiningen/test.clj#L162-L175
-(def ^:private -only-form
-  [`(fn [ns# & vars#]
-      ((set (for [v# vars#]
-              (-> (str v#)
-                  (.split "/")
-                  first
-                  symbol)))
-       ns#))
-   `(fn [m# & vars#]
-      (some #(let [var# (str "#'" %)]
-               (if (some #{\/} var#)
-                 (= var# (-> m# :leiningen.test/var str))
-                 (= % (ns-name (:ns m#)))))
-            vars#))])
+(def ^:private -only-selector
+  [(fn [ns & vars]
+     ((set (for [v vars]
+             (-> (str v)
+                 (.split "/")
+                 first
+                 symbol)))
+      ns))
+   (fn [m & vars]
+     (some #(let [var (str "#'" %)]
+              (if (some #{\/} var)
+                (= var (-> m :leiningen.test/var str))
+                (= % (ns-name (:ns m)))))
+           vars))])
 
 (defn ^:private -user-test-selectors-form [{:keys [test-selectors-form-file] :as _args}]
   (let [selectors (some-> test-selectors-form-file
                           slurp
-                          read-string)]
+                          read-string
+                          eval)]
     (when (some? selectors)
       (assert (map? selectors) (format "Selectors in file %s must be a map" test-selectors-form-file)))
     selectors))
@@ -116,8 +117,8 @@
   (let [args (opts->selectors opts)
         args (->> args (map -convert-to-ns))
         [nses given-selectors] (-split-selectors args quote-args?)
-        default-selectors {:all `(constantly true)
-                           :only -only-form}
+        default-selectors {:all (constantly true)
+                           :only -only-selector}
         selectors (-partial-selectors (into default-selectors
                                             user-selectors)
                                       given-selectors)

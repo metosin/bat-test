@@ -12,20 +12,27 @@
 
 (def ^:dynamic *bat-test-jar-version* nil)
 
+;; compile-time flag
+(def parallel? true)
+
 (defmacro doseq
   "Parallel doseq via pmap.
 
+  If parallel? is false, like clojure.core/doseq.
+
   argv must be pure"
   [argv & body]
-  `(binding [;; install jar synchronously
-             *bat-test-jar-version* (install-bat-test-jar)]
-     (dorun
-       (pmap
-         (fn [f#] (f#))
-         (doto (for ~argv
-                 ;; `let` to avoid recur target
-                 (fn [] (let [res# (do ~@body)] res#)))
-           (-> seq assert))))))
+  (if parallel?
+    `(binding [;; install jar synchronously
+               *bat-test-jar-version* (install-bat-test-jar)]
+       (dorun
+         (pmap
+           (fn [f#] (f#))
+           (doto (for ~argv
+                   ;; `let` to avoid recur target
+                   (fn [] (let [res# (do ~@body)] res#)))
+             (-> seq assert)))))
+    `(clojure.core/doseq ~argv ~@body)))
 
 (defn prep-exec-cmds
   ([cmd] (prep-exec-cmds #{:cli :lein} cmd))
