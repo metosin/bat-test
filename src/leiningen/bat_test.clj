@@ -36,12 +36,27 @@
     on-start (conj (quoted-namespace :on-start on-start))
     on-end (conj (quoted-namespace :on-end on-end))))
 
+(defn- absolutize-path [path]
+  (let [path (-> path io/file)]
+    (.get-path
+      (if (.isAbsolute path)
+        path
+        (io/file (System/getProperty "leiningen.original.pwd")
+                 path)))))
+
 (defn- run-tests [project opts watch?]
-  (let [watch-directories (or (:watch-directories opts) ;;TODO absolutize paths?
+  (let [watch-directories (or (not-empty
+                                (mapv absolutize-path (:watch-directories opts)))
                               (vec (concat (:test-paths project)
                                            (:source-paths project)
                                            (:resource-paths project))))
-        opts (assoc opts :watch-directories watch-directories)]
+        opts (-> opts
+                 (assoc :watch-directories watch-directories)
+                 ;; absolutize
+                 (cond->
+                   (:test-dirs opts)
+                   (update :test-dirs (fn [test-dirs]
+                                        (mapv absolutize-path test-dirs)))))]
     (eval/eval-in-project
       project
       (if watch?
@@ -114,7 +129,8 @@ Available options:
 :on-end          Function to be called after running tests
 :cloverage-opts  Cloverage options
 :notify-command  String or vector describing a command to run after tests
-:test-dirs       Path or vector of paths restricting the tests that will be matched. Relative to project root.
+:test-dirs       Path or vector of paths restricting the tests that will be matched. Non-absolute paths are relative
+                 to the directory Leiningen was called from.
                  Default: nil (no restrictions).
 :enter-key-listener If true, refresh tracker on enter key. Default: true. Only meaningful via `auto` subtask.
 
