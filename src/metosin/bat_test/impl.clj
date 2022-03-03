@@ -242,7 +242,7 @@
             (util/warn "Exception: %s\n" (.getMessage e))))))) )
 
 (defn run [{:keys [on-end watch-directories notify-command] :as opts}]
-  (prn `run opts)
+  ;(prn `run opts)
   (try
     (reset! running true)
     (swap! tracker (fn [tracker]

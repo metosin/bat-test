@@ -113,7 +113,12 @@ eg.,
 
 ```clojure
 ; deps.edn
-{:aliases {:test {:exec-args {:test-selectors-form-file "selectors.clj"}}}}
+{:aliases {:test {:extra-deps {metosin/bat-test {...}}
+                  :extra-paths ["test"]
+                  :exec-fn metosin.bat-test.cli/exec
+                  :exec-args {:test-dirs ["test"]
+                              ;; add this line
+                              :test-selectors-form-file "selectors.clj"}}}}
 ```
 
 You can share this file with Leiningen like so:

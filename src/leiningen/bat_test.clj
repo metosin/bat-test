@@ -69,7 +69,7 @@
                                                           (:source-paths project)
                                                           (:resource-paths project))))))
             absolutize-opts)]
-    (prn `run-tests opts)
+    ;(prn `run-tests opts)
     (eval/eval-in-project
       project
       (if watch?
