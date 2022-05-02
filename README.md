@@ -4,6 +4,8 @@
 
 Fast Clojure.test runner for [Boot](http://boot-clj.com/) and [Leiningen](https://leiningen.org/).
 
+For new projects or when using Clojure CLI, check [Kaocha](https://github.com/lambdaisland/kaocha).
+
 ## Features
 
 - **Requires tools.namespace 0.3.0-alpha3**
