@@ -6,6 +6,8 @@ Fast Clojure.test runner for [Boot](http://boot-clj.com/) and [Leiningen](https:
 
 For new projects or when using Clojure CLI, check [Kaocha](https://github.com/lambdaisland/kaocha).
 
+[Metosin Open Source Status: Deprecated](https://github.com/metosin/open-source/blob/main/project-status.md#deprecated)
+
 ## Features
 
 - **Requires tools.namespace 0.3.0-alpha3**
